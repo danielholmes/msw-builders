@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-graphql",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "Various MSW graphql helpers",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
     "format:check": "prettier -c \"src/**/*.ts\"",
     "prebuild": "run-p format:check test:all",
     "test": "mocha -w",
-    "test:all": "echo 'TODO: mocha'",
+    "test:all": "mocha",
     "build:esm": "rollup --config rollup.config.js",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build": "npm-run-all -s clean -p build:*",

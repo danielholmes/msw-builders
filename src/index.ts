@@ -1,5 +1,6 @@
 import { graphql, GraphQLVariables } from "msw";
 import { isEqual } from "lodash-es";
+import { getGraphQlName } from "./get-name";
 
 type HandlerOptions = {
   readonly onCalled?: () => void;
@@ -10,7 +11,7 @@ type GraphQlHandlersFactory = {
     Query_1 extends Record<string, any>,
     Variables_1 extends GraphQLVariables = GraphQLVariables
   >(
-    name: string,
+    nameOrMutation: string,
     expectedVariables: Variables_1,
     result: Query_1,
     options?: HandlerOptions
@@ -19,7 +20,7 @@ type GraphQlHandlersFactory = {
     Query_1 extends Record<string, any>,
     Variables_1 extends GraphQLVariables = GraphQLVariables
   >(
-    name: string,
+    nameOrQuery: string,
     expectedVariables: Variables_1,
     result: Query_1,
     options?: HandlerOptions
@@ -39,40 +40,46 @@ function createGraphQlHandlersFactory({
       Query_1 extends Record<string, any>,
       Variables_1 extends GraphQLVariables = GraphQLVariables
     >(
-      name: string,
+      nameOrMutation: string,
       expectedVariables: Variables_1,
       result: Query_1,
       options?: HandlerOptions
     ) =>
-      link.mutation<Query_1, Variables_1>(name, (req, res, ctx) => {
-        if (!isEqual(expectedVariables, req.variables)) {
-          return undefined;
+      link.mutation<Query_1, Variables_1>(
+        getGraphQlName("mutation", nameOrMutation),
+        (req, res, ctx) => {
+          if (!isEqual(expectedVariables, req.variables)) {
+            return undefined;
+          }
+          const onCalled = options?.onCalled;
+          if (onCalled) {
+            onCalled();
+          }
+          return res(ctx.data(result));
         }
-        const onCalled = options?.onCalled;
-        if (onCalled) {
-          onCalled();
-        }
-        return res(ctx.data(result));
-      }),
+      ),
     query: <
       Query_1 extends Record<string, any>,
       Variables_1 extends GraphQLVariables = GraphQLVariables
     >(
-      name: string,
+      nameOrQuery: string,
       expectedVariables: Variables_1,
       result: Query_1,
       options?: HandlerOptions
     ) =>
-      link.query<Query_1, Variables_1>(name, (req, res, ctx) => {
-        if (!isEqual(expectedVariables, req.variables)) {
-          return undefined;
+      link.query<Query_1, Variables_1>(
+        getGraphQlName("query", nameOrQuery),
+        (req, res, ctx) => {
+          if (!isEqual(expectedVariables, req.variables)) {
+            return undefined;
+          }
+          const onCalled = options?.onCalled;
+          if (onCalled) {
+            onCalled();
+          }
+          return res(ctx.data(result));
         }
-        const onCalled = options?.onCalled;
-        if (onCalled) {
-          onCalled();
-        }
-        return res(ctx.data(result));
-      }),
+      ),
   };
 }
 
