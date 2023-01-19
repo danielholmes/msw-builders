@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-graphql",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "description": "Various MSW graphql helpers",
   "main": "./dist/index.js",

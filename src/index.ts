@@ -2,6 +2,7 @@ import { graphql, GraphQLVariables } from "msw";
 import { isEqual, partial } from "lodash-es";
 import { getGraphQlName } from "./get-name";
 import { consoleDebugLog, nullLogger } from "./debug";
+import { objectDiff } from "./utils";
 
 type HandlerOptions = {
   readonly onCalled?: () => void;
@@ -54,11 +55,9 @@ function createGraphQlHandlersFactory({
         mutationName,
         (req, res, ctx) => {
           if (!isEqual(expectedVariables, req.variables)) {
-            // TODO: Some sort of diffing display like test runners use
+            const diff = objectDiff(expectedVariables, req.variables);
             debugLog(
-              `mutation ${mutationName}(${JSON.stringify(
-                expectedVariables
-              )}) doesn't match variables ${JSON.stringify(req.variables)}`
+              `mutation ${mutationName} variables diff: ${JSON.stringify(diff)}`
             );
             return undefined;
           }
@@ -82,11 +81,9 @@ function createGraphQlHandlersFactory({
       const queryName = getGraphQlName("query", nameOrQuery);
       return link.query<Query_1, Variables_1>(queryName, (req, res, ctx) => {
         if (!isEqual(expectedVariables, req.variables)) {
-          // TODO: Some sort of diffing display like test runners use
+          const diff = objectDiff(expectedVariables, req.variables);
           debugLog(
-            `query ${queryName}(${JSON.stringify(
-              expectedVariables
-            )}) doesn't match variables ${JSON.stringify(req.variables)}`
+            `query ${queryName} variables diff: ${JSON.stringify(diff)}`
           );
           return undefined;
         }
