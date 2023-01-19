@@ -1,6 +1,7 @@
 import { graphql, GraphQLVariables } from "msw";
-import { isEqual } from "lodash-es";
+import { isEqual, partial } from "lodash-es";
 import { getGraphQlName } from "./get-name";
+import { consoleDebugLog, nullLogger } from "./debug";
 
 type HandlerOptions = {
   readonly onCalled?: () => void;
@@ -29,12 +30,15 @@ type GraphQlHandlersFactory = {
 
 type Options = {
   readonly url: string;
+  readonly debug?: boolean;
 };
 
 function createGraphQlHandlersFactory({
   url,
+  debug,
 }: Options): GraphQlHandlersFactory {
   const link = graphql.link(url);
+  const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
     mutation: <
       Query_1 extends Record<string, any>,
@@ -44,11 +48,18 @@ function createGraphQlHandlersFactory({
       expectedVariables: Variables_1,
       result: Query_1,
       options?: HandlerOptions
-    ) =>
-      link.mutation<Query_1, Variables_1>(
-        getGraphQlName("mutation", nameOrMutation),
+    ) => {
+      const mutationName = getGraphQlName("mutation", nameOrMutation);
+      return link.mutation<Query_1, Variables_1>(
+        mutationName,
         (req, res, ctx) => {
           if (!isEqual(expectedVariables, req.variables)) {
+            // TODO: Some sort of diffing display like test runners use
+            debugLog(
+              `mutation ${mutationName}(${JSON.stringify(
+                expectedVariables
+              )}) doesn't match variables ${JSON.stringify(req.variables)}`
+            );
             return undefined;
           }
           const onCalled = options?.onCalled;
@@ -57,7 +68,8 @@ function createGraphQlHandlersFactory({
           }
           return res(ctx.data(result));
         }
-      ),
+      );
+    },
     query: <
       Query_1 extends Record<string, any>,
       Variables_1 extends GraphQLVariables = GraphQLVariables
@@ -66,20 +78,25 @@ function createGraphQlHandlersFactory({
       expectedVariables: Variables_1,
       result: Query_1,
       options?: HandlerOptions
-    ) =>
-      link.query<Query_1, Variables_1>(
-        getGraphQlName("query", nameOrQuery),
-        (req, res, ctx) => {
-          if (!isEqual(expectedVariables, req.variables)) {
-            return undefined;
-          }
-          const onCalled = options?.onCalled;
-          if (onCalled) {
-            onCalled();
-          }
-          return res(ctx.data(result));
+    ) => {
+      const queryName = getGraphQlName("query", nameOrQuery);
+      return link.query<Query_1, Variables_1>(queryName, (req, res, ctx) => {
+        if (!isEqual(expectedVariables, req.variables)) {
+          // TODO: Some sort of diffing display like test runners use
+          debugLog(
+            `query ${queryName}(${JSON.stringify(
+              expectedVariables
+            )}) doesn't match variables ${JSON.stringify(req.variables)}`
+          );
+          return undefined;
         }
-      ),
+        const onCalled = options?.onCalled;
+        if (onCalled) {
+          onCalled();
+        }
+        return res(ctx.data(result));
+      });
+    },
   };
 }
 
