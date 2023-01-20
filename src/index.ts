@@ -1,8 +1,8 @@
 import { graphql, GraphQLVariables } from "msw";
 import { isEqual, partial } from "lodash-es";
+import { diff } from "jest-diff";
 import { getGraphQlName } from "./get-name";
 import { consoleDebugLog, nullLogger } from "./debug";
-import { objectDiff } from "./utils";
 
 type HandlerOptions = {
   readonly onCalled?: () => void;
@@ -40,10 +40,8 @@ function matchMessage<Variables extends GraphQLVariables = GraphQLVariables>(
   expected: Variables,
   actual: Variables
 ) {
-  const diff = objectDiff(expected, actual);
-  return `${type} ${name} variables diff: ${JSON.stringify(
-    diff
-  )}, expected: ${JSON.stringify(expected)}, actual: ${actual}`;
+  const difference = diff(expected, actual);
+  return `${type} ${name} variables differ\n${difference}`;
 }
 
 function createGraphQlHandlersFactory({
