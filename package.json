@@ -1,8 +1,8 @@
 {
-  "name": "@dhau/msw-graphql",
-  "version": "0.0.7",
+  "name": "@dhau/msw-builders",
+  "version": "0.0.1",
   "type": "module",
-  "description": "Various MSW graphql helpers",
+  "description": "Various MSW builder utils for rest and graphql",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "module": "./dist/index.mjs",

@@ -1,11 +1,11 @@
-# Dhau MSW GraphQL
+# Dhau MSW Builders
 
-Some extra utilities to write MSW GraphQL handlers.
+Some extra utilities to write MSW GraphQL and rest handlers.
 
 ## Installation
 
 ```
-npm add @dhau/msw-graphql
+npm add @dhau/msw-builders
 ```
 
 ## Local Development
