@@ -10,21 +10,21 @@ type HandlerOptions = {
 
 type GraphQlHandlersFactory = {
   readonly mutation: <
-    Query_1 extends Record<string, any>,
-    Variables_1 extends GraphQLVariables = GraphQLVariables
+    Query extends Record<string, any>,
+    Variables extends GraphQLVariables = GraphQLVariables
   >(
     nameOrMutation: string,
-    expectedVariables: Variables_1,
-    result: Query_1,
+    expectedVariables: Variables,
+    result: Query,
     options?: HandlerOptions
   ) => ReturnType<typeof graphql.mutation>;
   readonly query: <
-    Query_1 extends Record<string, any>,
-    Variables_1 extends GraphQLVariables = GraphQLVariables
+    Query extends Record<string, any>,
+    Variables extends GraphQLVariables = GraphQLVariables
   >(
     nameOrQuery: string,
-    expectedVariables: Variables_1,
-    result: Query_1,
+    expectedVariables: Variables,
+    result: Query,
     options?: HandlerOptions
   ) => ReturnType<typeof graphql.query>;
 };
@@ -34,6 +34,18 @@ type Options = {
   readonly debug?: boolean;
 };
 
+function matchMessage<Variables extends GraphQLVariables = GraphQLVariables>(
+  type: string,
+  name: string,
+  expected: Variables,
+  actual: Variables
+) {
+  const diff = objectDiff(expected, actual);
+  return `${type} ${name} variables diff: ${JSON.stringify(
+    diff
+  )}, expected: ${JSON.stringify(expected)}, actual: ${actual}`;
+}
+
 function createGraphQlHandlersFactory({
   url,
   debug,
@@ -42,48 +54,48 @@ function createGraphQlHandlersFactory({
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
     mutation: <
-      Query_1 extends Record<string, any>,
-      Variables_1 extends GraphQLVariables = GraphQLVariables
+      Query extends Record<string, any>,
+      Variables extends GraphQLVariables = GraphQLVariables
     >(
       nameOrMutation: string,
-      expectedVariables: Variables_1,
-      result: Query_1,
+      expectedVariables: Variables,
+      result: Query,
       options?: HandlerOptions
     ) => {
       const mutationName = getGraphQlName("mutation", nameOrMutation);
-      return link.mutation<Query_1, Variables_1>(
-        mutationName,
-        (req, res, ctx) => {
-          if (!isEqual(expectedVariables, req.variables)) {
-            const diff = objectDiff(expectedVariables, req.variables);
-            debugLog(
-              `mutation ${mutationName} variables diff: ${JSON.stringify(diff)}`
-            );
-            return undefined;
-          }
-          const onCalled = options?.onCalled;
-          if (onCalled) {
-            onCalled();
-          }
-          return res(ctx.data(result));
+      return link.mutation<Query, Variables>(mutationName, (req, res, ctx) => {
+        if (!isEqual(expectedVariables, req.variables)) {
+          debugLog(
+            matchMessage(
+              "mutation",
+              mutationName,
+              expectedVariables,
+              req.variables
+            )
+          );
+          return undefined;
         }
-      );
+        const onCalled = options?.onCalled;
+        if (onCalled) {
+          onCalled();
+        }
+        return res(ctx.data(result));
+      });
     },
     query: <
-      Query_1 extends Record<string, any>,
-      Variables_1 extends GraphQLVariables = GraphQLVariables
+      Query extends Record<string, any>,
+      Variables extends GraphQLVariables = GraphQLVariables
     >(
       nameOrQuery: string,
-      expectedVariables: Variables_1,
-      result: Query_1,
+      expectedVariables: Variables,
+      result: Query,
       options?: HandlerOptions
     ) => {
       const queryName = getGraphQlName("query", nameOrQuery);
-      return link.query<Query_1, Variables_1>(queryName, (req, res, ctx) => {
+      return link.query<Query, Variables>(queryName, (req, res, ctx) => {
         if (!isEqual(expectedVariables, req.variables)) {
-          const diff = objectDiff(expectedVariables, req.variables);
           debugLog(
-            `query ${queryName} variables diff: ${JSON.stringify(diff)}`
+            matchMessage("query", queryName, expectedVariables, req.variables)
           );
           return undefined;
         }
