@@ -12,10 +12,12 @@ import { consoleDebugLog, nullLogger } from "./debug";
 
 type MatcherOptions<
   TSearchParams extends Record<string, string>,
-  THeaders extends Record<string, string>
+  THeaders extends Record<string, string>,
+  RequestBodyType extends DefaultBodyType = DefaultBodyType
 > = {
   readonly searchParams?: TSearchParams;
   readonly headers?: THeaders;
+  readonly body?: RequestBodyType;
 };
 
 type HandlerOptions = {
@@ -31,8 +33,8 @@ function matchMessage(
   type: string,
   method: string,
   url: string,
-  expected: Record<string, string>,
-  actual: Record<string, string>
+  expected: unknown,
+  actual: unknown
 ) {
   const difference = diff(expected, actual);
   return `${method} ${url} ${type} differ\n${difference}`;
@@ -61,7 +63,7 @@ function createRestHandlersFactory({ url, debug }: Options) {
       ResponseBody extends DefaultBodyType = DefaultBodyType
     >(
       path: string,
-      matchers: MatcherOptions<TSearchParams, THeaders>,
+      matchers: MatcherOptions<TSearchParams, THeaders, RequestBodyType>,
       response: ResponseResolver<
         RestRequest<RequestBodyType, Params>,
         RestContext,
@@ -73,7 +75,7 @@ function createRestHandlersFactory({ url, debug }: Options) {
       return rest.post<RequestBodyType, Params, ResponseBody>(
         fullUrl,
         (req, res, ctx) => {
-          const { searchParams, headers } = matchers;
+          const { searchParams, headers, body } = matchers;
           const { onCalled } = options ?? {};
 
           if (headers) {
@@ -82,6 +84,15 @@ function createRestHandlersFactory({ url, debug }: Options) {
               debugLog(
                 matchMessage("headers", "POST", fullUrl, headers, actualHeaders)
               );
+              return;
+            }
+          }
+
+          if (body) {
+            // TODO: Get async content of body
+            const actualBody = typeof req.body === "object" && body ? body : {};
+            if (!isEqual(body, actualBody)) {
+              debugLog(matchMessage("body", "POST", fullUrl, body, actualBody));
               return;
             }
           }

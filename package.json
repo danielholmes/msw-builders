@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "description": "Various MSW builder utils for rest and graphql",
   "main": "./dist/index.js",
