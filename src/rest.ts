@@ -10,14 +10,18 @@ import { isEqual, partial, trimEnd, trimStart } from "lodash-es";
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug";
 
+type NotFunction<T> = T extends Function ? never : T;
+
+type Matcher<T> = NotFunction<T> | ((value: T) => boolean);
+
 type MatcherOptions<
   TSearchParams extends Record<string, string>,
   THeaders extends Record<string, string>,
   RequestBodyType extends DefaultBodyType = DefaultBodyType
 > = {
-  readonly searchParams?: TSearchParams;
-  readonly headers?: THeaders;
-  readonly body?: RequestBodyType;
+  readonly searchParams?: Matcher<TSearchParams>;
+  readonly headers?: Matcher<THeaders>;
+  readonly body?: Matcher<RequestBodyType>;
 };
 
 type HandlerOptions = {
@@ -52,6 +56,22 @@ function searchParamsToObject(searchParams: URLSearchParams) {
   return obj;
 }
 
+function passesMatcher<T>(matcher: Matcher<T> | undefined, value: unknown) {
+  if (!matcher) {
+    return true;
+  }
+
+  if (typeof matcher === "object" && !isEqual(matcher, value)) {
+    return false;
+  }
+
+  if (typeof matcher === "function" && !(matcher as any)(value)) {
+    return false;
+  }
+
+  return true;
+}
+
 function createRestHandlersFactory({ url, debug }: Options) {
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
@@ -78,39 +98,29 @@ function createRestHandlersFactory({ url, debug }: Options) {
           const { searchParams, headers, body } = matchers;
           const { onCalled } = options ?? {};
 
-          if (headers) {
-            const actualHeaders = req.headers.all();
-            if (!isEqual(headers, actualHeaders)) {
-              debugLog(
-                matchMessage("headers", "POST", fullUrl, headers, actualHeaders)
-              );
-              return;
-            }
-          }
+          const checks = [
+            {
+              type: "headers",
+              matcher: headers,
+              actual: req.headers.all(),
+            },
+            {
+              type: "body",
+              matcher: body,
+              // TODO: Get async content of body
+              actual: typeof req.body === "object" && body ? body : {},
+            },
+            {
+              type: "searchParams",
+              matcher: searchParams,
+              actual: searchParamsToObject(req.url.searchParams),
+            },
+          ];
 
-          if (body) {
-            // TODO: Get async content of body
-            const actualBody = typeof req.body === "object" && body ? body : {};
-            if (!isEqual(body, actualBody)) {
-              debugLog(matchMessage("body", "POST", fullUrl, body, actualBody));
-              return;
-            }
-          }
-
-          if (searchParams) {
-            const actualSearchParams = searchParamsToObject(
-              req.url.searchParams
-            );
-            if (!isEqual(searchParams, actualSearchParams)) {
-              debugLog(
-                matchMessage(
-                  "searchParams",
-                  "POST",
-                  fullUrl,
-                  searchParams,
-                  actualSearchParams
-                )
-              );
+          for (let i = 0; i < checks.length; i++) {
+            const { actual, type, matcher } = checks[i];
+            if (!passesMatcher(matcher as any, actual)) {
+              debugLog(matchMessage(type, "POST", fullUrl, matcher, actual));
               return;
             }
           }
