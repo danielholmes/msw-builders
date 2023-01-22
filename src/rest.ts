@@ -10,8 +10,12 @@ import { isEqual, partial, trimEnd, trimStart } from "lodash-es";
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug";
 
-type MatcherOptions<TSearchParams extends Record<string, string>> = {
+type MatcherOptions<
+  TSearchParams extends Record<string, string>,
+  THeaders extends Record<string, string>
+> = {
   readonly searchParams?: TSearchParams;
+  readonly headers?: THeaders;
 };
 
 type HandlerOptions = {
@@ -51,12 +55,13 @@ function createRestHandlersFactory({ url, debug }: Options) {
   return {
     post: <
       TSearchParams extends Record<string, string>,
+      THeaders extends Record<string, string>,
       RequestBodyType extends DefaultBodyType = DefaultBodyType,
       Params extends PathParams<keyof Params> = PathParams<string>,
       ResponseBody extends DefaultBodyType = DefaultBodyType
     >(
       path: string,
-      matchers: MatcherOptions<TSearchParams>,
+      matchers: MatcherOptions<TSearchParams, THeaders>,
       response: ResponseResolver<
         RestRequest<RequestBodyType, Params>,
         RestContext,
@@ -68,8 +73,18 @@ function createRestHandlersFactory({ url, debug }: Options) {
       return rest.post<RequestBodyType, Params, ResponseBody>(
         fullUrl,
         (req, res, ctx) => {
-          const { searchParams } = matchers;
+          const { searchParams, headers } = matchers;
           const { onCalled } = options ?? {};
+
+          if (headers) {
+            const actualHeaders = req.headers.all();
+            if (!isEqual(headers, actualHeaders)) {
+              debugLog(
+                matchMessage("headers", "POST", fullUrl, headers, actualHeaders)
+              );
+              return;
+            }
+          }
 
           if (searchParams) {
             const actualSearchParams = searchParamsToObject(
