@@ -45,6 +45,9 @@ function matchMessage(
 }
 
 function createFullUrl(baseUrl: string, path: string) {
+  if (path === "") {
+    return baseUrl;
+  }
   return trimEnd(baseUrl, "/") + "/" + trimStart(path, "/");
 }
 
