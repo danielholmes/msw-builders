@@ -59,7 +59,7 @@ function searchParamsToObject(searchParams: URLSearchParams) {
   return obj;
 }
 
-function passesMatcher<T>(matcher: Matcher<T> | undefined, value: unknown) {
+function passesMatcher<T>(matcher: Matcher<T>, value: unknown) {
   if (!matcher) {
     return true;
   }
@@ -105,26 +105,30 @@ function createRestHandlersFactory({ url, debug }: Options) {
             {
               type: "headers",
               matcher: headers,
-              actual: req.headers.all(),
+              getActual: () => req.headers.all(),
             },
             {
               type: "body",
               matcher: body,
               // TODO: Get async content of body
-              actual: typeof req.body === "object" && body ? body : {},
+              getActual: () =>
+                typeof req.body === "object" && body ? body : {},
             },
             {
               type: "searchParams",
               matcher: searchParams,
-              actual: searchParamsToObject(req.url.searchParams),
+              getActual: () => searchParamsToObject(req.url.searchParams),
             },
           ];
 
           for (let i = 0; i < checks.length; i++) {
-            const { actual, type, matcher } = checks[i];
-            if (!passesMatcher(matcher as any, actual)) {
-              debugLog(matchMessage(type, "POST", fullUrl, matcher, actual));
-              return;
+            const { getActual, type, matcher } = checks[i];
+            if (matcher) {
+              const actual = getActual();
+              if (!passesMatcher(matcher as any, actual)) {
+                debugLog(matchMessage(type, "POST", fullUrl, matcher, actual));
+                return;
+              }
             }
           }
 
