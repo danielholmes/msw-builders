@@ -37,10 +37,13 @@ function matchMessage(
   type: string,
   method: string,
   url: string,
-  expected: unknown,
+  expected: Matcher<unknown>,
   actual: unknown
 ) {
-  const difference = diff(expected, actual);
+  const difference =
+    typeof expected === "function"
+      ? `doesn't match function matcher`
+      : diff(expected, actual);
   return `${method} ${url} ${type} differ\n${difference}`;
 }
 
