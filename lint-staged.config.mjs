@@ -12,6 +12,6 @@ export default {
       // TSC can apparently take either filepath inputs, or a project config.
       // lint-staged is passing in filename inputs, but we want the project config.
       // empty function removes the filepaths
-      () => "tsc --noEmit",
+      () => "tsc -p tsconfig.esm.json --noEmit",
     ],
   };
