@@ -1,4 +1,5 @@
 import { assert } from "chai";
+import { gql } from "graphql-tag";
 import { getGraphQlName } from "./get-name";
 
 describe("getGraphQlName", () => {
@@ -44,6 +45,21 @@ describe("getGraphQlName", () => {
             }
         }
         `
+    );
+
+    assert.equal(result, "viewerQuery");
+  });
+
+  it("returns name from args document node", () => {
+    const result = getGraphQlName(
+      "query",
+      gql`
+        query viewerQuery($id: ID!) {
+          viewer(id: $id) {
+            name
+          }
+        }
+      `
     );
 
     assert.equal(result, "viewerQuery");

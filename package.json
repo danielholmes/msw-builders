@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "type": "module",
   "sideEffects": false,
   "description": "Various MSW builder utils for rest and graphql",
@@ -44,6 +44,8 @@
     "@types/lodash-es": "^4.17.6",
     "@types/mocha": "^10.0.1",
     "chai": "^4.3.7",
+    "graphql": "^16.6.0",
+    "graphql-tag": "^2.12.6",
     "husky": "^8.0.3",
     "lint-staged": "^13.1.0",
     "mocha": "^10.2.0",

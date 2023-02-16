@@ -1,5 +1,6 @@
 import { graphql, GraphQLVariables } from "msw";
 import { isEqual, partial } from "lodash-es";
+import { DocumentNode } from "graphql";
 import { diff } from "jest-diff";
 import { getGraphQlName } from "./get-name";
 import { consoleDebugLog, nullLogger } from "./debug";
@@ -31,12 +32,12 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
       Query extends Record<string, any>,
       Variables extends GraphQLVariables = GraphQLVariables
     >(
-      nameOrMutation: string,
+      nameSource: string | DocumentNode,
       expectedVariables: Variables,
       result: Query,
       options?: HandlerOptions
     ) => {
-      const mutationName = getGraphQlName("mutation", nameOrMutation);
+      const mutationName = getGraphQlName("mutation", nameSource);
       return link.mutation<Query, Variables>(mutationName, (req, res, ctx) => {
         if (!isEqual(expectedVariables, req.variables)) {
           debugLog(
@@ -58,12 +59,12 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
       Query extends Record<string, any>,
       Variables extends GraphQLVariables = GraphQLVariables
     >(
-      nameOrQuery: string,
+      nameSource: string | DocumentNode,
       expectedVariables: Variables,
       result: Query,
       options?: HandlerOptions
     ) => {
-      const queryName = getGraphQlName("query", nameOrQuery);
+      const queryName = getGraphQlName("query", nameSource);
       return link.query<Query, Variables>(queryName, (req, res, ctx) => {
         if (!isEqual(expectedVariables, req.variables)) {
           debugLog(
