@@ -24,6 +24,10 @@ function matchMessage<Variables extends GraphQLVariables = GraphQLVariables>(
   return `${type} ${name} variables differ\n${difference}`;
 }
 
+type ResultProvider<TQuery, TVariables> =
+  | TQuery
+  | ((variables: TVariables) => TQuery);
+
 function createGraphQlHandlersFactory({ url, debug }: Options) {
   const link = graphql.link(url);
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
@@ -34,7 +38,7 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
     >(
       nameSource: string | DocumentNode,
       expectedVariables: Variables,
-      result: Query,
+      resultProvider: ResultProvider<Query, Variables>,
       options?: HandlerOptions
     ) => {
       const mutationName = getGraphQlName("mutation", nameSource);
@@ -52,6 +56,10 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
         }
         const { onCalled } = options ?? {};
         onCalled?.();
+        const result =
+          typeof resultProvider === "function"
+            ? resultProvider(req.variables)
+            : resultProvider;
         return res(ctx.data(result));
       });
     },
@@ -61,7 +69,7 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
     >(
       nameSource: string | DocumentNode,
       expectedVariables: Variables,
-      result: Query,
+      resultProvider: ResultProvider<Query, Variables>,
       options?: HandlerOptions
     ) => {
       const queryName = getGraphQlName("query", nameSource);
@@ -74,6 +82,10 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
         }
         const { onCalled } = options ?? {};
         onCalled?.();
+        const result =
+          typeof resultProvider === "function"
+            ? resultProvider(req.variables)
+            : resultProvider;
         return res(ctx.data(result));
       });
     },
