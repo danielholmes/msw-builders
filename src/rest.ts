@@ -10,7 +10,6 @@ import {
   isEqual,
   isMatch,
   mapKeys,
-  omit,
   partial,
   trimEnd,
   trimStart,
@@ -88,7 +87,7 @@ function passesMatcherContains<T>(matcher: Matcher<T>, value: object) {
     return false;
   }
 
-  if (!!matcher && typeof matcher === "object" && !isMatch(matcher, value)) {
+  if (!!matcher && typeof matcher === "object" && !isMatch(value, matcher)) {
     return false;
   }
 
@@ -123,7 +122,7 @@ function runMatchers<
 ) {
   // Headers. We want to allow other random headers, so we only do a contains match
   // We also want to match case-insensitively
-  const actualHeaders = omit(req.headers.all(), "content-type");
+  const actualHeaders = req.headers.all();
   if (
     headers !== undefined &&
     !passesMatcherContains(

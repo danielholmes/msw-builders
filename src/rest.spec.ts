@@ -203,12 +203,6 @@ describe("rest", () => {
         {
           headers: {
             auth: "token-123",
-            accept: "*/*",
-            "accept-encoding": "gzip,deflate",
-            connection: "close",
-            "content-length": "82",
-            host: "techhk.aoscdn.com",
-            "user-agent": "node-fetch/1.0",
           },
         },
         (_1, res, ctx) =>
@@ -225,6 +219,12 @@ describe("rest", () => {
           headers: {
             AUTH: "token-123",
             "Content-Type": "application/json",
+            accept: "*/*",
+            "accept-encoding": "gzip,deflate",
+            connection: "close",
+            "content-length": "82",
+            host: "techhk.aoscdn.com",
+            "user-agent": "node-fetch/1.0",
           },
         }
       );
