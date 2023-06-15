@@ -6,7 +6,15 @@ import {
   RestRequest,
   PathParams,
 } from "msw";
-import { isEqual, omit, partial, trimEnd, trimStart } from "lodash-es";
+import {
+  isEqual,
+  isMatch,
+  mapKeys,
+  omit,
+  partial,
+  trimEnd,
+  trimStart,
+} from "lodash-es";
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug";
 
@@ -72,7 +80,22 @@ function searchParamsToObject(searchParams: URLSearchParams) {
   return obj;
 }
 
-function passesMatcher<T>(matcher: Matcher<T>, value: unknown) {
+function passesMatcherContains<T>(matcher: Matcher<T>, value: object) {
+  if (
+    typeof matcher === "function" &&
+    !(matcher as unknown as MatcherFunction)(value)
+  ) {
+    return false;
+  }
+
+  if (!!matcher && typeof matcher === "object" && !isMatch(matcher, value)) {
+    return false;
+  }
+
+  return true;
+}
+
+function passesMatcherEqual<T>(matcher: Matcher<T>, value: unknown) {
   if (
     typeof matcher === "function" &&
     !(matcher as unknown as MatcherFunction)(value)
@@ -98,9 +121,18 @@ function runMatchers<
   req: RestRequest<RequestBodyType, Params>,
   debugLog: (message: string) => void
 ) {
-  // Headers
+  // Headers. We want to allow other random headers, so we only do a contains match
+  // We also want to match case-insensitively
   const actualHeaders = omit(req.headers.all(), "content-type");
-  if (headers !== undefined && !passesMatcher(headers, actualHeaders)) {
+  if (
+    headers !== undefined &&
+    !passesMatcherContains(
+      typeof headers === "object"
+        ? mapKeys(headers, (_, k) => k.toLowerCase())
+        : headers,
+      mapKeys(actualHeaders, (_, k) => k.toLowerCase())
+    )
+  ) {
     debugLog(matchMessage("headers", "POST", fullUrl, headers, actualHeaders));
     return false;
   }
@@ -109,7 +141,7 @@ function runMatchers<
   const actualSearchParams = searchParamsToObject(req.url.searchParams);
   if (
     searchParams !== undefined &&
-    !passesMatcher(searchParams, actualSearchParams)
+    !passesMatcherEqual(searchParams, actualSearchParams)
   ) {
     debugLog(
       matchMessage(
@@ -189,7 +221,7 @@ function createRestHandlersFactory({ url, debug }: Options) {
 
           // Body
           const actualBody = typeof req.body === "object" ? req.body : {};
-          if (body !== undefined && !passesMatcher(body, actualBody)) {
+          if (body !== undefined && !passesMatcherEqual(body, actualBody)) {
             debugLog(matchMessage("body", "POST", fullUrl, body, actualBody));
             return;
           }
