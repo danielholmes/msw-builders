@@ -21,7 +21,7 @@ function matchMessage<Variables extends GraphQLVariables = GraphQLVariables>(
   actual: Variables
 ) {
   const difference = diff(expected, actual);
-  return `${type} ${name} variables differ\n${difference}`;
+  return `${type} ${name} variables differ\n${difference ?? ""}`;
 }
 
 type ResultProvider<TQuery, TVariables> =
@@ -33,7 +33,7 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
     mutation: <
-      Query extends Record<string, any>,
+      Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables
     >(
       nameSource: string | DocumentNode,
@@ -64,7 +64,7 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
       });
     },
     query: <
-      Query extends Record<string, any>,
+      Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables
     >(
       nameSource: string | DocumentNode,
