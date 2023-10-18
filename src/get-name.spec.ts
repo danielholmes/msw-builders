@@ -17,7 +17,7 @@ describe("getGraphQlName", () => {
             viewer {
                 name
             }
-        }`
+        }`,
     );
 
     assert.equal(result, "viewerQuery");
@@ -30,7 +30,7 @@ describe("getGraphQlName", () => {
             viewer(id: $id) {
                 name
             }
-        }`
+        }`,
     );
 
     assert.equal(result, "viewerQuery");
@@ -45,7 +45,7 @@ describe("getGraphQlName", () => {
                 name
             }
         }
-        `
+        `,
     );
 
     assert.equal(result, "viewerQuery");
@@ -60,7 +60,7 @@ describe("getGraphQlName", () => {
             name
           }
         }
-      `
+      `,
     );
 
     assert.equal(result, "viewerQuery");

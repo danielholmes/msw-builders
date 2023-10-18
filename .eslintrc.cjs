@@ -42,6 +42,16 @@ module.exports = {
     "filenames/match-regex": ["warn", "^[a-z.-]+$", true],
 
     // Serve a purpose a lot of the time
-    "@typescript-eslint/no-empty-function": "off"
+    "@typescript-eslint/no-empty-function": "off",
+
+    // Triggering for describe, etc in tests
+    "@typescript-eslint/no-floating-promises": "off",
+
+    // Too strict atm, giving too many errors
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-unsafe-return": "off"
   }
 }

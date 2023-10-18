@@ -5,7 +5,8 @@
       "es6",
       "es7",
       "esnext",
-      "dom"
+      "dom",
+      "dom.iterable"
     ],
     "target": "es2018",
     "removeComments": false,

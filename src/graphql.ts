@@ -1,4 +1,6 @@
-import { graphql, GraphQLVariables } from "msw";
+// Waiting to find new API for graphql variables. Then can remove this.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { graphql, GraphQLVariables, HttpResponse } from "msw";
 import { isEqual, partial } from "lodash-es";
 import { DocumentNode } from "graphql";
 import { diff } from "jest-diff";
@@ -18,7 +20,7 @@ function matchMessage<Variables extends GraphQLVariables = GraphQLVariables>(
   type: string,
   name: string,
   expected: Variables,
-  actual: Variables
+  actual: Variables,
 ) {
   const difference = diff(expected, actual);
   return `${type} ${name} variables differ\n${difference ?? ""}`;
@@ -34,59 +36,66 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
   return {
     mutation: <
       Query extends Record<string, unknown>,
-      Variables extends GraphQLVariables = GraphQLVariables
+      Variables extends GraphQLVariables = GraphQLVariables,
     >(
       nameSource: string | DocumentNode,
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
-      options?: HandlerOptions
+      options?: HandlerOptions,
     ) => {
       const mutationName = getGraphQlName("mutation", nameSource);
-      return link.mutation<Query, Variables>(mutationName, (req, res, ctx) => {
-        if (!isEqual(expectedVariables, req.variables)) {
+      return link.mutation<Query, Variables>(mutationName, ({ request }) => {
+        // TODO: Update variables. Not sure how to use them in new msw version
+        if (!isEqual(expectedVariables, (request as any).variables)) {
           debugLog(
             matchMessage(
               "mutation",
               mutationName,
               expectedVariables,
-              req.variables
-            )
+              (request as any).variables,
+            ),
           );
           return undefined;
         }
         const { onCalled } = options ?? {};
         onCalled?.();
-        const result =
+        const data =
           typeof resultProvider === "function"
-            ? resultProvider(req.variables)
+            ? resultProvider((request as unknown as any).variables)
             : resultProvider;
-        return res(ctx.data(result));
+        return HttpResponse.json({ data });
       });
     },
     query: <
       Query extends Record<string, unknown>,
-      Variables extends GraphQLVariables = GraphQLVariables
+      Variables extends GraphQLVariables = GraphQLVariables,
     >(
       nameSource: string | DocumentNode,
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
-      options?: HandlerOptions
+      options?: HandlerOptions,
     ) => {
       const queryName = getGraphQlName("query", nameSource);
-      return link.query<Query, Variables>(queryName, (req, res, ctx) => {
-        if (!isEqual(expectedVariables, req.variables)) {
+      return link.query<Query, Variables>(queryName, ({ request }) => {
+        // TODO: Update variables. Not sure how to use them in new msw version
+        if (!isEqual(expectedVariables, (request as any).variables)) {
           debugLog(
-            matchMessage("query", queryName, expectedVariables, req.variables)
+            matchMessage(
+              "query",
+              queryName,
+              expectedVariables,
+              (request as any).variables,
+            ),
           );
           return undefined;
         }
         const { onCalled } = options ?? {};
         onCalled?.();
-        const result =
+        const data =
           typeof resultProvider === "function"
-            ? resultProvider(req.variables)
+            ? resultProvider((request as any).variables)
             : resultProvider;
-        return res(ctx.data(result));
+        return HttpResponse.json({ data });
       });
     },
   };
