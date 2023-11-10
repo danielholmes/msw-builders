@@ -44,15 +44,15 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
       options?: HandlerOptions,
     ) => {
       const mutationName = getGraphQlName("mutation", nameSource);
-      return link.mutation<Query, Variables>(mutationName, ({ request }) => {
+      return link.mutation<Query, Variables>(mutationName, ({ variables }) => {
         // TODO: Update variables. Not sure how to use them in new msw version
-        if (!isEqual(expectedVariables, (request as any).variables)) {
+        if (!isEqual(expectedVariables, variables)) {
           debugLog(
             matchMessage(
               "mutation",
               mutationName,
               expectedVariables,
-              (request as any).variables,
+              variables,
             ),
           );
           return undefined;
@@ -61,7 +61,7 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
         onCalled?.();
         const data =
           typeof resultProvider === "function"
-            ? resultProvider((request as unknown as any).variables)
+            ? resultProvider(variables)
             : resultProvider;
         return HttpResponse.json({ data });
       });
@@ -76,16 +76,10 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
       options?: HandlerOptions,
     ) => {
       const queryName = getGraphQlName("query", nameSource);
-      return link.query<Query, Variables>(queryName, ({ request }) => {
-        // TODO: Update variables. Not sure how to use them in new msw version
-        if (!isEqual(expectedVariables, (request as any).variables)) {
+      return link.query<Query, Variables>(queryName, ({ variables }) => {
+        if (!isEqual(expectedVariables, variables)) {
           debugLog(
-            matchMessage(
-              "query",
-              queryName,
-              expectedVariables,
-              (request as any).variables,
-            ),
+            matchMessage("query", queryName, expectedVariables, variables),
           );
           return undefined;
         }
@@ -93,7 +87,7 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
         onCalled?.();
         const data =
           typeof resultProvider === "function"
-            ? resultProvider((request as any).variables)
+            ? resultProvider(variables)
             : resultProvider;
         return HttpResponse.json({ data });
       });
