@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "type": "module",
   "sideEffects": false,
   "description": "Various MSW builder utils for rest and graphql",
@@ -9,7 +9,6 @@
   "module": "./dist/index.mjs",
   "exports": {
     ".": {
-      "require": "./dist/index.js",
       "import": "./dist/index.mjs",
       "types": "./dist/index.d.ts"
     },
@@ -29,7 +28,7 @@
     "test": "node --watch --import tsx --test src/*.spec.ts",
     "test:all": "node --import tsx --test src/*.spec.ts",
     "build:esm": "rollup --config rollup.config.js",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:ts": "tsc -p tsconfig.types.json",
     "build": "npm-run-all -s clean -p build:*",
     "npm:publish": "npm publish --access public",
     "deploy": "run-s build npm:publish",
