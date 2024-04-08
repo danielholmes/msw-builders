@@ -215,7 +215,7 @@ function createRestHandlersFactory({ url, debug }: Options) {
       const fullUrl = createFullUrl(url, path);
       return http.post<Params, RequestBodyType, ResponseBody>(
         fullUrl,
-        (info) => {
+        async (info) => {
           const { body } = matchers;
           const { onCalled } = options ?? {};
 
@@ -224,15 +224,14 @@ function createRestHandlersFactory({ url, debug }: Options) {
           }
 
           // Body
-          return extractBodyContent(info.request).then((actualBody) => {
-            if (body !== undefined && !passesMatcherEqual(body, actualBody)) {
-              debugLog(matchMessage("body", "POST", fullUrl, body, actualBody));
-              return undefined;
-            }
+          const actualBody = await extractBodyContent(info.request);
+          if (body !== undefined && !passesMatcherEqual(body, actualBody)) {
+            debugLog(matchMessage("body", "POST", fullUrl, body, actualBody));
+            return undefined;
+          }
 
-            onCalled?.();
-            return response(info);
-          });
+          onCalled?.();
+          return response(info);
         },
       );
     },

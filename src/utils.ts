@@ -1,17 +1,16 @@
-async function extractBodyContent(body: Body) {
-  const strategies = [
-    async () => body.json(),
-    async () => body.text(),
-    async () => body.arrayBuffer(),
-  ];
-  for (const strategy of strategies) {
-    try {
-      return await strategy();
-    } catch (e) {
-      // Try next strategy
-    }
+async function extractBodyContent(
+  requestOrResponse: Pick<Response, "headers" | "json" | "formData">,
+): Promise<Record<string, unknown>> {
+  const contentType = requestOrResponse.headers.get("Content-Type");
+  if (contentType === "application/json") {
+    return requestOrResponse.json();
   }
-  return undefined;
+  if (contentType?.startsWith("multipart/form-data")) {
+    const data = await requestOrResponse.formData();
+    return Object.fromEntries(data.entries());
+  }
+
+  return {};
 }
 
 export { extractBodyContent };
