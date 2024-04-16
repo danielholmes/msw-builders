@@ -1,5 +1,6 @@
-import { describe, it } from "node:test";
+import { describe, it, before, afterEach, after } from "node:test";
 import assert from "node:assert/strict";
+import { setupServer } from "msw/node";
 import { DefaultBodyType, HttpResponse, StrictRequest } from "msw";
 import { createRestHandlersFactory } from "./http";
 import { extractBodyContent } from "./utils";
@@ -265,6 +266,113 @@ describe("http", () => {
           },
         },
       );
+
+      const result = await matcher.run({ request });
+
+      const responseBody = result?.response?.body
+        ? await extractBodyContent(result.response)
+        : undefined;
+      assert.deepEqual(responseBody, { ok: true });
+      assert.equal(result?.response?.status, 200);
+    });
+  });
+
+  describe("post-integration", () => {
+    const server = setupServer();
+
+    before(() => server.listen());
+    afterEach(() => server.resetHandlers());
+    after(() => server.close());
+
+    it("works correctly", async () => {
+      const serviceBuilder = createRestHandlersFactory({
+        url: "http://localhost:7357",
+      });
+      let handlerCalled = false;
+      server.use(
+        serviceBuilder.post(
+          "/test",
+          { body: { hello: "other" } },
+          () => HttpResponse.json({ ok: true }),
+          {
+            onCalled() {
+              handlerCalled = true;
+            },
+          },
+        ),
+      );
+
+      const response = await fetch(
+        new Request("http://localhost:7357/test", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ hello: "other" }),
+        }),
+      );
+
+      assert.equal(handlerCalled, true);
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { ok: true });
+    });
+
+    it("works correctly with second handler match", async () => {
+      const serviceBuilder = createRestHandlersFactory({
+        url: "http://localhost:7357",
+      });
+      let firstHandlerCalled = false;
+      let secondHandlerCalled = false;
+      server.use(
+        serviceBuilder.post(
+          "/test",
+          { body: { foo: "bar" } },
+          () => HttpResponse.json({ ok: true }),
+          {
+            onCalled() {
+              firstHandlerCalled = true;
+            },
+          },
+        ),
+        serviceBuilder.post(
+          "/test",
+          { body: { hello: "other" } },
+          () => HttpResponse.json({ ok: "2" }),
+          {
+            onCalled() {
+              secondHandlerCalled = true;
+            },
+          },
+        ),
+      );
+
+      const response = await fetch(
+        new Request("http://localhost:7357/test", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ hello: "other" }),
+        }),
+      );
+
+      assert.equal(firstHandlerCalled, false);
+      assert.equal(secondHandlerCalled, true);
+      assert.equal(response.status, 200);
+      assert.deepEqual(await response.json(), { ok: "2" });
+    });
+  });
+
+  describe("options", () => {
+    it("allows matching of no matchers", async () => {
+      const matcher = builders.options("/test", {}, () =>
+        HttpResponse.json({
+          ok: true,
+        }),
+      );
+      const request = new Request(new URL("https://www.example.org/test"), {
+        method: "OPTIONS",
+      });
 
       const result = await matcher.run({ request });
 

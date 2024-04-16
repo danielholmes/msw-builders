@@ -159,6 +159,33 @@ function runMatchers<
 function createRestHandlersFactory({ url, debug }: Options) {
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
+    options: <
+      TSearchParams extends Record<string, string>,
+      THeaders extends Record<string, string>,
+      Params extends PathParams<keyof Params> = PathParams,
+      ResponseBody extends DefaultBodyType = DefaultBodyType,
+    >(
+      path: string,
+      matchers: MatcherOptions<TSearchParams, THeaders>,
+      response: ResponseResolver<
+        HttpRequestResolverExtras<Params>,
+        never,
+        ResponseBody
+      >,
+      options?: HandlerOptions,
+    ) => {
+      const fullUrl = createFullUrl(url, path);
+      return http.options<Params, never, ResponseBody>(fullUrl, (info) => {
+        const { onCalled } = options ?? {};
+
+        if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
+          return;
+        }
+
+        onCalled?.();
+        return response(info);
+      });
+    },
     get: <
       TSearchParams extends Record<string, string>,
       THeaders extends Record<string, string>,
@@ -216,15 +243,16 @@ function createRestHandlersFactory({ url, debug }: Options) {
       return http.post<Params, RequestBodyType, ResponseBody>(
         fullUrl,
         async (info) => {
+          const { request } = info;
           const { body } = matchers;
           const { onCalled } = options ?? {};
 
-          if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
+          if (!runMatchers(matchers, fullUrl, request, debugLog)) {
             return undefined;
           }
 
-          // Body
-          const actualBody = await extractBodyContent(info.request);
+          // Body. Cloning important because multiple handlers may read body
+          const actualBody = await extractBodyContent(request.clone());
           if (body !== undefined && !passesMatcherEqual(body, actualBody)) {
             debugLog(matchMessage("body", "POST", fullUrl, body, actualBody));
             return undefined;

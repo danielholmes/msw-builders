@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "type": "module",
   "sideEffects": false,
   "description": "Various MSW builder utils for rest and graphql",
@@ -21,8 +21,8 @@
     "clean": "rm -rf dist",
     "format": "prettier -w \"src/**/*.ts\"",
     "format:check": "prettier -c \"src/**/*.ts\"",
-    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint --ext .ts,.tsx --fix ./src",
-    "lint:check": "eslint --cache --cache-location ./node_modules/.cache/eslint --ext .ts,.tsx ./src",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint --ext .ts --fix ./src",
+    "lint:check": "eslint --cache --cache-location ./node_modules/.cache/eslint --ext .ts ./src",
     "ts": "tsc --noEmit",
     "test": "node --watch --import tsx --test src/*.spec.ts",
     "test:all": "node --import tsx --test src/*.spec.ts",

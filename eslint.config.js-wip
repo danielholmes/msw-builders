@@ -1,0 +1,69 @@
+// Status - typescript and import (at least, might be others) don't support eslint 9 yet
+import js from "@eslint/js";
+import prettier from "eslint-config-prettier"
+import importPlugin from "eslint-plugin-import"
+import promise from "eslint-plugin-promise"
+import ts from "@typescript-eslint/eslint-plugin"
+
+// plugins: [
+//   "@typescript-eslint",
+//   "deprecation",
+//   "promise",
+//   "import",
+//   "filenames"
+// ]
+
+export default [
+  js.configs.recommended,
+  ts.configs.recommended,
+  ts.configs["recommended-type-checked"],
+  ts.configs.strict,
+  importPlugin.configs.recommended,
+  importPlugin.configs.typescript,
+  promise.configs.recommended,
+  prettier,
+  {
+    // files: ["*.ts"],
+    languageOptions: {
+      parser: '@typescript-eslint/parser'
+    },
+    plugins: {
+      
+    },
+    rules: {
+      // Better performance when include extensions
+      "import/extensions": ["error", "ignorePackages"],
+
+      // I Like all exports being at end of file
+      "import/exports-last": "error",
+
+      // Default was interfaces, I like types
+      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+
+      // Want to ensure unions are covered
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
+      
+      // Want to know if there's uses of deprecated code
+      "deprecation/deprecation": "warn",
+
+      // Allow console warns and errors, but don't want accidental debug logs
+      "no-console": ["error", { "allow": ["debug", "warn", "error"] }],
+
+      // kebab case files
+      "filenames/match-regex": ["warn", "^[a-z.-]+$", true],
+
+      // Serve a purpose a lot of the time
+      "@typescript-eslint/no-empty-function": "off",
+
+      // Triggering for describe, etc in tests
+      "@typescript-eslint/no-floating-promises": "off",
+
+      // Too strict atm, giving too many errors
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-return": "off"
+    }
+  }
+]
