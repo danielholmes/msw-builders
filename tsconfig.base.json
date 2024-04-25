@@ -16,6 +16,7 @@
     "strict": true,
     "skipLibCheck": true,
     "strictPropertyInitialization": false,
+    "allowImportingTsExtensions": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,

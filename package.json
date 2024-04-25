@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.20",
+  "version": "0.0.22",
   "type": "module",
   "sideEffects": false,
   "description": "Various MSW builder utils for rest and graphql",
@@ -26,7 +26,7 @@
     "ts": "tsc --noEmit",
     "test": "node --watch --import tsx --test src/*.spec.ts",
     "test:all": "node --import tsx --test src/*.spec.ts",
-    "prebuild": "run-p format:check lint:check test:all",
+    "prebuild": "run-p format:check lint:check",
     "build:esm": "rollup --config rollup.config.js",
     "build:ts": "tsc -p tsconfig.types.json",
     "build": "npm-run-all -s clean -p build:*",

@@ -23,6 +23,9 @@ module.exports = {
     "filenames"
   ],
   rules: {
+    // Better performance when include extensions
+    "import/extensions": ["error", "ignorePackages"],
+    
     // I Like all exports being at end of file
     "import/exports-last": "error",
 

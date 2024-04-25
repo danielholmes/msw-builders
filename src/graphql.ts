@@ -1,19 +1,24 @@
 // Waiting to find new API for graphql variables. Then can remove this.
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { graphql, GraphQLVariables, HttpResponse } from "msw";
+import {
+  graphql,
+  GraphQLRequestHandler,
+  GraphQLVariables,
+  HttpResponse,
+  RequestHandlerOptions,
+} from "msw";
 import { isEqual, partial } from "lodash-es";
-import { DocumentNode } from "graphql";
 import { diff } from "jest-diff";
-import { getGraphQlName } from "./get-name";
-import { consoleDebugLog, nullLogger } from "./debug";
+import { consoleDebugLog, nullLogger } from "./debug.ts";
 
-type HandlerOptions = {
+type HandlerOptions = RequestHandlerOptions & {
   readonly onCalled?: () => void;
 };
 
 type Options = {
   readonly url: string;
   readonly debug?: boolean;
+  readonly defaultRequestHandlerOptions?: RequestHandlerOptions;
 };
 
 function matchMessage<Variables extends GraphQLVariables = GraphQLVariables>(
@@ -30,7 +35,11 @@ type ResultProvider<TQuery, TVariables> =
   | TQuery
   | ((variables: TVariables) => TQuery);
 
-function createGraphQlHandlersFactory({ url, debug }: Options) {
+function createGraphQlHandlersFactory({
+  url,
+  debug,
+  defaultRequestHandlerOptions,
+}: Options) {
   const link = graphql.link(url);
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
@@ -38,59 +47,76 @@ function createGraphQlHandlersFactory({ url, debug }: Options) {
       Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables,
     >(
-      nameSource: string | DocumentNode,
+      operationName: Parameters<GraphQLRequestHandler>[0],
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
       options?: HandlerOptions,
     ) => {
-      const mutationName = getGraphQlName("mutation", nameSource);
-      return link.mutation<Query, Variables>(mutationName, ({ variables }) => {
-        // TODO: Update variables. Not sure how to use them in new msw version
-        if (!isEqual(expectedVariables, variables)) {
-          debugLog(
-            matchMessage(
-              "mutation",
-              mutationName,
-              expectedVariables,
-              variables,
-            ),
-          );
-          return undefined;
-        }
-        const { onCalled } = options ?? {};
-        onCalled?.();
-        const data =
-          typeof resultProvider === "function"
-            ? resultProvider(variables)
-            : resultProvider;
-        return HttpResponse.json({ data });
-      });
+      const { onCalled, ...rest } = {
+        ...defaultRequestHandlerOptions,
+        ...options,
+      };
+      return link.mutation<Query, Variables>(
+        operationName,
+        ({ variables }) => {
+          // TODO: Update variables. Not sure how to operationName them in new msw version
+          if (!isEqual(expectedVariables, variables)) {
+            debugLog(
+              matchMessage(
+                "mutation",
+                String(operationName),
+                expectedVariables,
+                variables,
+              ),
+            );
+            return undefined;
+          }
+          onCalled?.();
+          const data =
+            typeof resultProvider === "function"
+              ? resultProvider(variables)
+              : resultProvider;
+          return HttpResponse.json({ data });
+        },
+        rest,
+      );
     },
     query: <
       Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables,
     >(
-      nameSource: string | DocumentNode,
+      operationName: Parameters<GraphQLRequestHandler>[0],
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
       options?: HandlerOptions,
     ) => {
-      const queryName = getGraphQlName("query", nameSource);
-      return link.query<Query, Variables>(queryName, ({ variables }) => {
-        if (!isEqual(expectedVariables, variables)) {
-          debugLog(
-            matchMessage("query", queryName, expectedVariables, variables),
-          );
-          return undefined;
-        }
-        const { onCalled } = options ?? {};
-        onCalled?.();
-        const data =
-          typeof resultProvider === "function"
-            ? resultProvider(variables)
-            : resultProvider;
-        return HttpResponse.json({ data });
-      });
+      const { onCalled, ...rest } = {
+        ...defaultRequestHandlerOptions,
+        ...options,
+      };
+      return link.query<Query, Variables>(
+        operationName,
+        ({ variables }) => {
+          if (!isEqual(expectedVariables, variables)) {
+            debugLog(
+              matchMessage(
+                "query",
+                String(operationName),
+                expectedVariables,
+                variables,
+              ),
+            );
+            return undefined;
+          }
+          onCalled?.();
+          const data =
+            typeof resultProvider === "function"
+              ? resultProvider(variables)
+              : resultProvider;
+          return HttpResponse.json({ data });
+        },
+        rest,
+      );
     },
   };
 }

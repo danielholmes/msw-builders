@@ -2,8 +2,8 @@ import { describe, it, before, afterEach, after } from "node:test";
 import assert from "node:assert/strict";
 import { setupServer } from "msw/node";
 import { DefaultBodyType, HttpResponse, StrictRequest } from "msw";
-import { createRestHandlersFactory } from "./http";
-import { extractBodyContent } from "./utils";
+import { createRestHandlersFactory } from "./http.ts";
+import { extractBodyContent } from "./utils.ts";
 
 describe("http", () => {
   const builders = createRestHandlersFactory({

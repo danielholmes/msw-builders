@@ -1,2 +1,2 @@
-export * from "./graphql";
-export * from "./http";
+export * from "./graphql.ts";
+export * from "./http.ts";

@@ -4,6 +4,7 @@ import {
   ResponseResolver,
   PathParams,
   ResponseResolverReturnType,
+  RequestHandlerOptions,
 } from "msw";
 import { HttpRequestResolverExtras } from "msw/lib/core/handlers/HttpHandler";
 import {
@@ -15,8 +16,8 @@ import {
   trimStart,
 } from "lodash-es";
 import { diff } from "jest-diff";
-import { consoleDebugLog, nullLogger } from "./debug";
-import { extractBodyContent } from "./utils";
+import { consoleDebugLog, nullLogger } from "./debug.ts";
+import { extractBodyContent } from "./utils.ts";
 
 // NotFunction didn't work for me, maybe look into in future
 // type NotFunction<T> = T extends Function ? never : T;
@@ -49,6 +50,7 @@ type HandlerOptions = {
 type Options = {
   readonly url: string;
   readonly debug?: boolean;
+  readonly defaultRequestHandlerOptions?: RequestHandlerOptions;
 };
 
 function matchMessage(
@@ -156,7 +158,11 @@ function runMatchers<
   return true;
 }
 
-function createRestHandlersFactory({ url, debug }: Options) {
+function createRestHandlersFactory({
+  url,
+  debug,
+  defaultRequestHandlerOptions,
+}: Options) {
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
     options: <
@@ -174,17 +180,23 @@ function createRestHandlersFactory({ url, debug }: Options) {
       >,
       options?: HandlerOptions,
     ) => {
+      const { onCalled, ...rest } = {
+        ...defaultRequestHandlerOptions,
+        ...options,
+      };
       const fullUrl = createFullUrl(url, path);
-      return http.options<Params, never, ResponseBody>(fullUrl, (info) => {
-        const { onCalled } = options ?? {};
+      return http.options<Params, never, ResponseBody>(
+        fullUrl,
+        (info) => {
+          if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
+            return;
+          }
 
-        if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
-          return;
-        }
-
-        onCalled?.();
-        return response(info);
-      });
+          onCalled?.();
+          return response(info);
+        },
+        rest,
+      );
     },
     get: <
       TSearchParams extends Record<string, string>,
@@ -201,17 +213,23 @@ function createRestHandlersFactory({ url, debug }: Options) {
       >,
       options?: HandlerOptions,
     ) => {
+      const { onCalled, ...rest } = {
+        ...defaultRequestHandlerOptions,
+        ...options,
+      };
       const fullUrl = createFullUrl(url, path);
-      return http.get<Params, never, ResponseBody>(fullUrl, (info) => {
-        const { onCalled } = options ?? {};
+      return http.get<Params, never, ResponseBody>(
+        fullUrl,
+        (info) => {
+          if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
+            return;
+          }
 
-        if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
-          return;
-        }
-
-        onCalled?.();
-        return response(info);
-      });
+          onCalled?.();
+          return response(info);
+        },
+        rest,
+      );
     },
     post: <
       TSearchParams extends Record<string, string>,
@@ -239,13 +257,16 @@ function createRestHandlersFactory({ url, debug }: Options) {
         | Promise<ResponseResolverReturnType<ResponseBody>>,
       options?: HandlerOptions,
     ) => {
+      const { onCalled, ...rest } = {
+        ...defaultRequestHandlerOptions,
+        ...options,
+      };
       const fullUrl = createFullUrl(url, path);
       return http.post<Params, RequestBodyType, ResponseBody>(
         fullUrl,
         async (info) => {
           const { request } = info;
           const { body } = matchers;
-          const { onCalled } = options ?? {};
 
           if (!runMatchers(matchers, fullUrl, request, debugLog)) {
             return undefined;
@@ -261,6 +282,7 @@ function createRestHandlersFactory({ url, debug }: Options) {
           onCalled?.();
           return response(info);
         },
+        rest,
       );
     },
   };
