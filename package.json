@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.23",
+  "version": "0.0.25",
   "type": "module",
   "sideEffects": false,
   "description": "Various MSW builder utils for rest and graphql",
