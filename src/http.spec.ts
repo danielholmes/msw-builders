@@ -21,7 +21,7 @@ describe("http", () => {
         method: "POST",
       }) as StrictRequest<DefaultBodyType>;
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       const responseBody = result?.response?.body
         ? await extractBodyContent(result.response)
@@ -40,7 +40,7 @@ describe("http", () => {
         method: "POST",
       });
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       assert.equal(result, null);
     });
@@ -80,7 +80,7 @@ describe("http", () => {
         },
       );
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       const responseBody = result?.response?.body
         ? await extractBodyContent(result.response)
@@ -123,7 +123,7 @@ describe("http", () => {
         },
       );
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       const responseBody = result?.response?.body
         ? await extractBodyContent(result.response)
@@ -144,7 +144,7 @@ describe("http", () => {
         method: "GET",
       });
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       const responseBody = result?.response?.body
         ? await extractBodyContent(result.response)
@@ -163,7 +163,7 @@ describe("http", () => {
         method: "GET",
       });
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       assert.equal(result, null);
     });
@@ -195,7 +195,7 @@ describe("http", () => {
         },
       );
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       const responseBody = result?.response?.body
         ? await extractBodyContent(result.response)
@@ -228,7 +228,7 @@ describe("http", () => {
         },
       );
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       const responseBody = result?.response?.body
         ? await extractBodyContent(result.response)
@@ -267,7 +267,7 @@ describe("http", () => {
         },
       );
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       const responseBody = result?.response?.body
         ? await extractBodyContent(result.response)
@@ -374,7 +374,7 @@ describe("http", () => {
         method: "OPTIONS",
       });
 
-      const result = await matcher.run({ request });
+      const result = await matcher.run({ requestId: "1", request });
 
       const responseBody = result?.response?.body
         ? await extractBodyContent(result.response)

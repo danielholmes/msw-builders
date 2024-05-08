@@ -1,6 +1,7 @@
 // Waiting to find new API for graphql variables. Then can remove this.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  DefaultBodyType,
   graphql,
   GraphQLRequestHandler,
   GraphQLVariables,
@@ -9,11 +10,14 @@ import {
 } from "msw";
 import { isEqual, partial } from "lodash-es";
 import { diff } from "jest-diff";
+import { GraphQLError } from "graphql";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
 
-type HandlerOptions = RequestHandlerOptions & {
+type BuilderHandlerOptions = {
   readonly onCalled?: () => void;
 };
+
+type HandlerOptions = RequestHandlerOptions & BuilderHandlerOptions;
 
 type Options = {
   readonly url: string;
@@ -31,9 +35,18 @@ function matchMessage<Variables extends GraphQLVariables = GraphQLVariables>(
   return `${type} ${name} variables differ\n${difference ?? ""}`;
 }
 
-type ResultProvider<TQuery, TVariables> =
-  | TQuery
-  | ((variables: TVariables) => TQuery);
+// Copied from msw - can't find how to import it
+type GraphQLResponseBody<BodyType extends DefaultBodyType> =
+  | {
+      data?: BodyType | null;
+      errors?: readonly Partial<GraphQLError>[] | null;
+    }
+  | null
+  | undefined;
+
+type ResultProvider<TQuery extends DefaultBodyType, TVariables> =
+  | GraphQLResponseBody<TQuery>
+  | ((variables: TVariables) => GraphQLResponseBody<TQuery>);
 
 function createGraphQlHandlersFactory({
   url,
@@ -72,14 +85,43 @@ function createGraphQlHandlersFactory({
             return undefined;
           }
           onCalled?.();
-          const data =
+          const responseBody =
             typeof resultProvider === "function"
               ? resultProvider(variables)
               : resultProvider;
-          return HttpResponse.json({ data });
+          return HttpResponse.json(responseBody);
         },
         rest,
       );
+    },
+    operation: <
+      Query extends Record<string, unknown>,
+      Variables extends GraphQLVariables = GraphQLVariables,
+    >(
+      expectedVariables: Variables,
+      resultProvider: ResultProvider<Query, Variables>,
+      options?: BuilderHandlerOptions,
+    ) => {
+      const { onCalled } = options ?? {};
+      return link.operation<Query, Variables>(({ variables }) => {
+        if (!isEqual(expectedVariables, variables)) {
+          debugLog(
+            matchMessage(
+              "operation",
+              "(anonymous)",
+              expectedVariables,
+              variables,
+            ),
+          );
+          return undefined;
+        }
+        onCalled?.();
+        const responseBody =
+          typeof resultProvider === "function"
+            ? resultProvider(variables)
+            : resultProvider;
+        return HttpResponse.json(responseBody);
+      });
     },
     query: <
       Query extends Record<string, unknown>,
@@ -109,11 +151,11 @@ function createGraphQlHandlersFactory({
             return undefined;
           }
           onCalled?.();
-          const data =
+          const responseBody =
             typeof resultProvider === "function"
               ? resultProvider(variables)
               : resultProvider;
-          return HttpResponse.json({ data });
+          return HttpResponse.json(responseBody);
         },
         rest,
       );
