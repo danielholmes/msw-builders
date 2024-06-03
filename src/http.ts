@@ -6,7 +6,6 @@ import {
   type ResponseResolverReturnType,
   type RequestHandlerOptions,
 } from "msw";
-import type { HttpRequestResolverExtras } from "msw/lib/core/handlers/HttpHandler";
 import {
   isEqual,
   isMatch,
@@ -18,6 +17,12 @@ import {
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
 import { extractBodyContent } from "./utils.ts";
+
+// Not exported by msw
+type HttpRequestResolverExtras<Params extends PathParams> = {
+  params: Params;
+  cookies: Record<string, string>;
+};
 
 // NotFunction didn't work for me, maybe look into in future
 // type NotFunction<T> = T extends Function ? never : T;
