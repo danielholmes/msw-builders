@@ -1,12 +1,12 @@
 import {
   http,
-  DefaultBodyType,
-  ResponseResolver,
-  PathParams,
-  ResponseResolverReturnType,
-  RequestHandlerOptions,
+  type DefaultBodyType,
+  type ResponseResolver,
+  type PathParams,
+  type ResponseResolverReturnType,
+  type RequestHandlerOptions,
 } from "msw";
-import { HttpRequestResolverExtras } from "msw/lib/core/handlers/HttpHandler";
+import type { HttpRequestResolverExtras } from "msw/lib/core/handlers/HttpHandler";
 import {
   isEqual,
   isMatch,

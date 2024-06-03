@@ -1,12 +1,12 @@
 // Waiting to find new API for graphql variables. Then can remove this.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  DefaultBodyType,
   graphql,
-  GraphQLRequestHandler,
-  GraphQLVariables,
   HttpResponse,
-  RequestHandlerOptions,
+  type DefaultBodyType,
+  type GraphQLRequestHandler,
+  type GraphQLVariables,
+  type RequestHandlerOptions,
 } from "msw";
 import { isEqual, partial } from "lodash-es";
 import { diff } from "jest-diff";
