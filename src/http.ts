@@ -5,6 +5,7 @@ import {
   type PathParams,
   type ResponseResolverReturnType,
   type RequestHandlerOptions,
+  StrictRequest,
 } from "msw";
 import {
   isEqual,
@@ -17,6 +18,16 @@ import {
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
 import { extractBodyContent } from "./utils.ts";
+
+// Can't use this import, so duplicating
+// import { ResponseResolverInfo } from "msw/lib/core/handlers/RequestHandler";
+type ResponseResolverInfo<
+  ResolverExtraInfo extends Record<string, unknown>,
+  RequestBodyType extends DefaultBodyType = DefaultBodyType,
+> = {
+  request: StrictRequest<RequestBodyType>;
+  requestId: string;
+} & ResolverExtraInfo;
 
 // Not exported by msw
 type HttpRequestResolverExtras<Params extends PathParams> = {
@@ -250,13 +261,17 @@ function createRestHandlersFactory({
         RequestBodyType
       >,
       response: (
-        info: Parameters<
-          ResponseResolver<
-            HttpRequestResolverExtras<Params>,
-            RequestBodyType,
-            ResponseBody
-          >
-        >[0],
+        info: ResponseResolverInfo<
+          HttpRequestResolverExtras<Params>,
+          RequestBodyType
+        >,
+        // Parameters<
+        //   ResponseResolver<
+        //     HttpRequestResolverExtras<Params>,
+        //     RequestBodyType,
+        //     ResponseBody
+        //   >
+        // >[0],
       ) =>
         | ResponseResolverReturnType<ResponseBody>
         | Promise<ResponseResolverReturnType<ResponseBody>>,
