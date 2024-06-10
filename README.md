@@ -1,5 +1,7 @@
 # Dhau MSW Builders
 
+[![Test](https://github.com/danielholmes/msw-builders/actions/workflows/test.yml/badge.svg)](https://github.com/danielholmes/msw-builders/actions/workflows/test.yml)
+
 Some extra utilities to write MSW GraphQL and rest handlers.
 
 ## Installation
