@@ -28,8 +28,10 @@
     "ts": "tsc --noEmit",
     "test": "node --watch --import tsx --test src/*.spec.ts",
     "test:all": "node --import tsx --test src/*.spec.ts",
-    "jsr:checks": "jsr publish --dry-run",
-    "prebuild": "run-p format:check lint:check test:all jsr:checks",
+    "jsr:check": "jsr publish --dry-run",
+    "publint:check": "publint",
+    "attw:check": "attw --pack .",
+    "prebuild": "run-p format:check lint:check test:all jsr:check publint:check attw:check",
     "build": "tsup",
     "publish:npm": "npm publish --access public",
     "publish:jsr": "jsr publish --allow-slow-types",
@@ -43,6 +45,7 @@
     "lodash-es": "^4.17.21"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.15.3",
     "@types/lodash-es": "^4.17.6",
     "@types/node": "^20.3.1",
     "@typescript-eslint/eslint-plugin": "^7.6.0",
@@ -61,6 +64,7 @@
     "msw": "^2.0.4",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.0.3",
+    "publint": "^0.2.8",
     "tslib": "^2.4.1",
     "tsup": "^8.1.0",
     "tsx": "^4.0.0",
