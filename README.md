@@ -5,7 +5,7 @@ Some extra utilities to write MSW GraphQL and rest handlers.
 ## Installation
 
 ```
-npm add @dhau/msw-builders
+npm add -D @dhau/msw-builders
 ```
 
 ## Local Development
@@ -18,4 +18,5 @@ npm add @dhau/msw-builders
 ### Publishing
 
 1. Manually set new version in `package.json`
-2. `npm run deploy`
+2. Manually set new version in `jsr.json`
+3. `npm run deploy`
