@@ -7,14 +7,12 @@ import {
   type RequestHandlerOptions,
   StrictRequest,
 } from "msw";
-import {
-  isEqual,
-  isMatch,
-  mapKeys,
-  partial,
-  trimEnd,
-  trimStart,
-} from "lodash-es";
+import isEqual from "lodash-es/isEqual.js";
+import partial from "lodash-es/partial.js";
+import isMatch from "lodash-es/isMatch.js";
+import mapKeys from "lodash-es/mapKeys.js";
+import trimEnd from "lodash-es/trimEnd.js";
+import trimStart from "lodash-es/trimStart.js";
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
 import { extractBodyContent } from "./utils.ts";

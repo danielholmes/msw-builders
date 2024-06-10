@@ -8,7 +8,8 @@ import {
   type GraphQLVariables,
   type RequestHandlerOptions,
 } from "msw";
-import { isEqual, partial } from "lodash-es";
+import isEqual from "lodash-es/isEqual.js";
+import partial from "lodash-es/partial.js";
 import { diff } from "jest-diff";
 import { GraphQLError } from "graphql";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
