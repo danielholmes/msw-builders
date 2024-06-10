@@ -33,7 +33,7 @@
     "attw:check": "attw --pack .",
     "prebuild": "run-p format:check lint:check test:all jsr:check attw:check",
     "build": "tsup",
-    "postbuild": "publint:check",
+    "postbuild": "run-p publint:check",
     "publish:npm": "npm publish --access public",
     "publish:jsr": "jsr publish --allow-slow-types",
     "deploy": "run-s build publish:*",
