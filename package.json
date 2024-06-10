@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "type": "module",
   "sideEffects": false,
   "description": "Various MSW builder utils for rest and graphql",
@@ -9,7 +9,6 @@
   "module": "./dist/index.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "require": "./dist/index.cjs",
       "require.types": "./dist/index.d.cts",
       "import": "./dist/index.js",
