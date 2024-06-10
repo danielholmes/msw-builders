@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   graphql,
+  GraphQLHandler,
   HttpResponse,
   type DefaultBodyType,
   type GraphQLRequestHandler,
@@ -49,11 +50,40 @@ type ResultProvider<TQuery extends DefaultBodyType, TVariables> =
   | GraphQLResponseBody<TQuery>
   | ((variables: TVariables) => GraphQLResponseBody<TQuery>);
 
+type GraphQlHandlersFactory = {
+  mutation: <
+    Query extends Record<string, unknown>,
+    Variables extends GraphQLVariables = GraphQLVariables,
+  >(
+    operationName: Parameters<GraphQLRequestHandler>[0],
+    expectedVariables: Variables,
+    resultProvider: ResultProvider<Query, Variables>,
+    options?: HandlerOptions,
+  ) => GraphQLHandler;
+  operation: <
+    Query extends Record<string, unknown>,
+    Variables extends GraphQLVariables = GraphQLVariables,
+  >(
+    expectedVariables: Variables,
+    resultProvider: ResultProvider<Query, Variables>,
+    options?: HandlerOptions,
+  ) => GraphQLHandler;
+  query: <
+    Query extends Record<string, unknown>,
+    Variables extends GraphQLVariables = GraphQLVariables,
+  >(
+    operationName: Parameters<GraphQLRequestHandler>[0],
+    expectedVariables: Variables,
+    resultProvider: ResultProvider<Query, Variables>,
+    options?: HandlerOptions,
+  ) => GraphQLHandler;
+};
+
 function createGraphQlHandlersFactory({
   url,
   debug,
   defaultRequestHandlerOptions,
-}: Options) {
+}: Options): GraphQlHandlersFactory {
   const link = graphql.link(url);
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
@@ -163,8 +193,6 @@ function createGraphQlHandlersFactory({
     },
   };
 }
-
-type GraphQlHandlersFactory = ReturnType<typeof createGraphQlHandlersFactory>;
 
 export type { GraphQlHandlersFactory };
 export { createGraphQlHandlersFactory };

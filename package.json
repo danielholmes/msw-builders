@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "type": "module",
   "sideEffects": false,
   "description": "Various MSW builder utils for rest and graphql",
@@ -28,7 +28,8 @@
     "ts": "tsc --noEmit",
     "test": "node --watch --import tsx --test src/*.spec.ts",
     "test:all": "node --import tsx --test src/*.spec.ts",
-    "prebuild": "run-p format:check lint:check test:all",
+    "jsr:checks": "jsr publish --dry-run",
+    "prebuild": "run-p format:check lint:check test:all jsr:checks",
     "build": "tsup",
     "publish:npm": "npm publish --access public",
     "publish:jsr": "jsr publish --allow-slow-types",

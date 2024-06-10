@@ -6,6 +6,7 @@ import {
   type ResponseResolverReturnType,
   type RequestHandlerOptions,
   StrictRequest,
+  HttpHandler,
 } from "msw";
 import isEqual from "lodash-es/isEqual.js";
 import partial from "lodash-es/partial.js";
@@ -172,11 +173,63 @@ function runMatchers<
   return true;
 }
 
+type RestHandlersFactory = {
+  post: <
+    TSearchParams extends Record<string, string>,
+    THeaders extends Record<string, string>,
+    RequestBodyType extends DefaultBodyType = DefaultBodyType,
+    Params extends PathParams<keyof Params> = PathParams,
+    ResponseBody extends DefaultBodyType = DefaultBodyType,
+  >(
+    path: string,
+    matchers: WithBodyMatcherOptions<TSearchParams, THeaders, RequestBodyType>,
+    response: (
+      info: ResponseResolverInfo<
+        HttpRequestResolverExtras<Params>,
+        RequestBodyType
+      >,
+    ) =>
+      | ResponseResolverReturnType<ResponseBody>
+      | Promise<ResponseResolverReturnType<ResponseBody>>,
+    options?: HandlerOptions,
+  ) => HttpHandler;
+  get: <
+    TSearchParams extends Record<string, string>,
+    THeaders extends Record<string, string>,
+    Params extends PathParams<keyof Params> = PathParams,
+    ResponseBody extends DefaultBodyType = DefaultBodyType,
+  >(
+    path: string,
+    matchers: MatcherOptions<TSearchParams, THeaders>,
+    response: ResponseResolver<
+      HttpRequestResolverExtras<Params>,
+      never,
+      ResponseBody
+    >,
+    options?: HandlerOptions,
+  ) => HttpHandler;
+  options: <
+    TSearchParams extends Record<string, string>,
+    THeaders extends Record<string, string>,
+    Params extends PathParams<keyof Params> = PathParams,
+    ResponseBody extends DefaultBodyType = DefaultBodyType,
+  >(
+    path: string,
+    matchers: MatcherOptions<TSearchParams, THeaders>,
+    response: ResponseResolver<
+      HttpRequestResolverExtras<Params>,
+      never,
+      ResponseBody
+    >,
+    options?: HandlerOptions,
+  ) => HttpHandler;
+};
+
 function createRestHandlersFactory({
   url,
   debug,
   defaultRequestHandlerOptions,
-}: Options) {
+}: Options): RestHandlersFactory {
   const debugLog = debug ? partial(consoleDebugLog, url) : nullLogger;
   return {
     options: <
@@ -305,8 +358,6 @@ function createRestHandlersFactory({
     },
   };
 }
-
-type RestHandlersFactory = ReturnType<typeof createRestHandlersFactory>;
 
 export type { RestHandlersFactory };
 export { createRestHandlersFactory };
