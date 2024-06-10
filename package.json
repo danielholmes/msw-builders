@@ -37,7 +37,7 @@
     "publish:npm": "npm publish --access public",
     "publish:jsr": "jsr publish",
     "deploy": "run-s build publish:*",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "author": "Daniel Holmes",
   "license": "MIT",
