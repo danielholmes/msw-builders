@@ -1,0 +1,66 @@
+name: Publish Package to npmjs and JSR
+
+on:
+  workflow_dispatch:
+    inputs:
+      description:
+        description: 'Release description'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: "Publish"
+
+    runs-on: ubuntu-24.04
+
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ASDF Setup
+        uses: asdf-vm/actions/setup@v3
+
+      - name: Restore ASDF tools from cache
+        id: asdf-tools-cache
+        uses: actions/cache@v4
+        with:
+          key: asdf-tools-${{ hashFiles('**/.tool-versions') }}
+          restore-keys: |
+            asdf-tools-
+          path: |
+            ${{ env.ASDF_DIR }}/plugins
+            ${{ env.ASDF_DIR }}/installs
+
+      - name: Install ASDF tools on cache-miss
+        if: ${{ steps.asdf-tools-cache.outputs.cache-hit != 'true' }}
+        uses: asdf-vm/actions/install@v3
+        
+      - name: Reshim installed ASDF tools
+        shell: bash
+        run: asdf reshim
+
+      - name: Install dependencies
+        uses: bahmutov/npm-install@v1
+
+      - name: Setup registry
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }}" > ~/.npmrc
+    
+      - name: Extract version
+        run: echo "TAG_NAME=$(jq -r .version package.json)" >> $GITHUB_ENV
+
+      - name: Deploy
+        run: npm run deploy
+    
+      - name: Tag and release
+        uses: avakar/tag-and-release@v1
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: ${{ env.TAG_NAME }}
+          draft: false
+          body: ${{ inputs.description }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}

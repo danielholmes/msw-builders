@@ -1,7 +1,10 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "type": "module",
+  "repository": {
+    "url": "https://github.com/danielholmes/msw-builders"
+  },
   "sideEffects": false,
   "description": "Various MSW builder utils for rest and graphql",
   "types": "./dist/index.d.ts",
@@ -20,23 +23,23 @@
     "dist"
   ],
   "scripts": {
-    "clean": "rm -rf dist",
     "format": "prettier -w \"src/**/*.ts\"",
     "format:check": "prettier -c \"src/**/*.ts\"",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint --ext .ts --fix ./src",
     "lint:check": "eslint --cache --cache-location ./node_modules/.cache/eslint --ext .ts ./src",
     "ts": "tsc --noEmit",
-    "test": "node --watch --import tsx --test src/*.spec.ts",
-    "test:all": "node --import tsx --test src/*.spec.ts",
     "jsr:check": "jsr publish --dry-run",
     "publint:check": "publint",
     "attw:check": "attw --pack .",
-    "prebuild": "run-p format:check lint:check test:all jsr:check attw:check",
+    "versions:check": "[ $(jq .version package.json) = $(jq .version jsr.json) ];",
+    "prebuild": "run-p format:check lint:check test:all jsr:check versions:check",
     "build": "tsup",
-    "postbuild": "run-p publint:check",
-    "publish:npm": "npm publish --access public",
+    "postbuild": "run-p publint:check attw:check",
+    "publish:npm": "npm publish --access public --provenance",
     "publish:jsr": "jsr publish",
     "deploy": "run-s build publish:*",
+    "test": "node --watch --import tsx --test src/*.spec.ts",
+    "test:all": "node --import tsx --test src/*.spec.ts",
     "prepare": "husky"
   },
   "author": "Daniel Holmes",
