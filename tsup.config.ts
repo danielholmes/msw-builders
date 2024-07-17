@@ -8,5 +8,5 @@ export default defineConfig({
   format: ['cjs', 'esm'],
   treeshake: true,
   dts: true,
-  minify: true,
+  minify: false,
 })
