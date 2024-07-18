@@ -13,7 +13,10 @@ async function extractBodyContent(
     return requestOrResponse.json();
   }
 
-  if (contentType?.startsWith("multipart/form-data")) {
+  if (
+    contentType?.startsWith("multipart/form-data") ||
+    contentType?.startsWith("application/x-www-form-urlencoded")
+  ) {
     const data = await requestOrResponse.formData();
     return Object.fromEntries(data.entries());
   }
