@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.35",
+  "version": "0.0.37",
   "type": "module",
   "repository": {
     "url": "https://github.com/danielholmes/msw-builders"
@@ -45,15 +45,13 @@
   "author": "Daniel Holmes",
   "license": "MIT",
   "dependencies": {
-    "jest-diff": "^29.3.1",
-    "lodash-es": "^4.17.21"
+    "jest-diff": "^29.3.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.15.3",
-    "@types/lodash-es": "^4.17.6",
-    "@types/node": "^20.3.1",
-    "@typescript-eslint/eslint-plugin": "^7.6.0",
-    "@typescript-eslint/parser": "^7.6.0",
+    "@arethetypeswrong/cli": "^0.17.0",
+    "@types/node": "^22.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-deprecation": "^2.0.0",
@@ -70,7 +68,7 @@
     "prettier": "^3.0.3",
     "publint": "^0.2.8",
     "tslib": "^2.4.1",
-    "tsup": "8.1.0",
+    "tsup": "^8.2.4",
     "tsx": "^4.0.0",
     "typescript": "^5.1.3"
   },

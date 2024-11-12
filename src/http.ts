@@ -8,15 +8,17 @@ import {
   StrictRequest,
   HttpHandler,
 } from "msw";
-import isEqual from "lodash-es/isEqual.js";
-import partial from "lodash-es/partial.js";
-import isMatch from "lodash-es/isMatch.js";
-import mapKeys from "lodash-es/mapKeys.js";
-import trimEnd from "lodash-es/trimEnd.js";
-import trimStart from "lodash-es/trimStart.js";
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
-import { extractBodyContent } from "./utils.ts";
+import {
+  partial,
+  isEqual,
+  isMatch,
+  mapKeys,
+  trimEnd,
+  trimStart,
+  extractBodyContent,
+} from "./utils.ts";
 
 // Can't use this import, so duplicating
 // import { ResponseResolverInfo } from "msw/lib/core/handlers/RequestHandler";
@@ -146,7 +148,7 @@ function runMatchers<
       mapKeys(actualHeaders, (_, k) => k.toLowerCase()),
     )
   ) {
-    debugLog(matchMessage("headers", "POST", fullUrl, headers, actualHeaders));
+    debugLog(matchMessage("headers", "_", fullUrl, headers, actualHeaders));
     return false;
   }
 
@@ -161,7 +163,7 @@ function runMatchers<
     debugLog(
       matchMessage(
         "searchParams",
-        "POST",
+        "_",
         fullUrl,
         searchParams,
         actualSearchParams,
@@ -175,6 +177,44 @@ function runMatchers<
 
 type RestHandlersFactory = {
   post: <
+    TSearchParams extends Record<string, string>,
+    THeaders extends Record<string, string>,
+    RequestBodyType extends DefaultBodyType = DefaultBodyType,
+    Params extends PathParams<keyof Params> = PathParams,
+    ResponseBody extends DefaultBodyType = DefaultBodyType,
+  >(
+    path: string,
+    matchers: WithBodyMatcherOptions<TSearchParams, THeaders, RequestBodyType>,
+    response: (
+      info: ResponseResolverInfo<
+        HttpRequestResolverExtras<Params>,
+        RequestBodyType
+      >,
+    ) =>
+      | ResponseResolverReturnType<ResponseBody>
+      | Promise<ResponseResolverReturnType<ResponseBody>>,
+    options?: HandlerOptions,
+  ) => HttpHandler;
+  put: <
+    TSearchParams extends Record<string, string>,
+    THeaders extends Record<string, string>,
+    RequestBodyType extends DefaultBodyType = DefaultBodyType,
+    Params extends PathParams<keyof Params> = PathParams,
+    ResponseBody extends DefaultBodyType = DefaultBodyType,
+  >(
+    path: string,
+    matchers: WithBodyMatcherOptions<TSearchParams, THeaders, RequestBodyType>,
+    response: (
+      info: ResponseResolverInfo<
+        HttpRequestResolverExtras<Params>,
+        RequestBodyType
+      >,
+    ) =>
+      | ResponseResolverReturnType<ResponseBody>
+      | Promise<ResponseResolverReturnType<ResponseBody>>,
+    options?: HandlerOptions,
+  ) => HttpHandler;
+  patch: <
     TSearchParams extends Record<string, string>,
     THeaders extends Record<string, string>,
     RequestBodyType extends DefaultBodyType = DefaultBodyType,
@@ -347,6 +387,122 @@ function createRestHandlersFactory({
           const actualBody = await extractBodyContent(request.clone());
           if (body !== undefined && !passesMatcherEqual(body, actualBody)) {
             debugLog(matchMessage("body", "POST", fullUrl, body, actualBody));
+            return undefined;
+          }
+
+          onCalled?.();
+          return response(info);
+        },
+        rest,
+      );
+    },
+    put: <
+      TSearchParams extends Record<string, string>,
+      THeaders extends Record<string, string>,
+      RequestBodyType extends DefaultBodyType = DefaultBodyType,
+      Params extends PathParams<keyof Params> = PathParams,
+      ResponseBody extends DefaultBodyType = DefaultBodyType,
+    >(
+      path: string,
+      matchers: WithBodyMatcherOptions<
+        TSearchParams,
+        THeaders,
+        RequestBodyType
+      >,
+      response: (
+        info: ResponseResolverInfo<
+          HttpRequestResolverExtras<Params>,
+          RequestBodyType
+        >,
+        // Parameters<
+        //   ResponseResolver<
+        //     HttpRequestResolverExtras<Params>,
+        //     RequestBodyType,
+        //     ResponseBody
+        //   >
+        // >[0],
+      ) =>
+        | ResponseResolverReturnType<ResponseBody>
+        | Promise<ResponseResolverReturnType<ResponseBody>>,
+      options?: HandlerOptions,
+    ) => {
+      const { onCalled, ...rest } = {
+        ...defaultRequestHandlerOptions,
+        ...options,
+      };
+      const fullUrl = createFullUrl(url, path);
+      return http.put<Params, RequestBodyType, ResponseBody>(
+        fullUrl,
+        async (info) => {
+          const { request } = info;
+          const { body } = matchers;
+
+          if (!runMatchers(matchers, fullUrl, request, debugLog)) {
+            return undefined;
+          }
+
+          // Body. Cloning important because multiple handlers may read body
+          const actualBody = await extractBodyContent(request.clone());
+          if (body !== undefined && !passesMatcherEqual(body, actualBody)) {
+            debugLog(matchMessage("body", "PUT", fullUrl, body, actualBody));
+            return undefined;
+          }
+
+          onCalled?.();
+          return response(info);
+        },
+        rest,
+      );
+    },
+    patch: <
+      TSearchParams extends Record<string, string>,
+      THeaders extends Record<string, string>,
+      RequestBodyType extends DefaultBodyType = DefaultBodyType,
+      Params extends PathParams<keyof Params> = PathParams,
+      ResponseBody extends DefaultBodyType = DefaultBodyType,
+    >(
+      path: string,
+      matchers: WithBodyMatcherOptions<
+        TSearchParams,
+        THeaders,
+        RequestBodyType
+      >,
+      response: (
+        info: ResponseResolverInfo<
+          HttpRequestResolverExtras<Params>,
+          RequestBodyType
+        >,
+        // Parameters<
+        //   ResponseResolver<
+        //     HttpRequestResolverExtras<Params>,
+        //     RequestBodyType,
+        //     ResponseBody
+        //   >
+        // >[0],
+      ) =>
+        | ResponseResolverReturnType<ResponseBody>
+        | Promise<ResponseResolverReturnType<ResponseBody>>,
+      options?: HandlerOptions,
+    ) => {
+      const { onCalled, ...rest } = {
+        ...defaultRequestHandlerOptions,
+        ...options,
+      };
+      const fullUrl = createFullUrl(url, path);
+      return http.patch<Params, RequestBodyType, ResponseBody>(
+        fullUrl,
+        async (info) => {
+          const { request } = info;
+          const { body } = matchers;
+
+          if (!runMatchers(matchers, fullUrl, request, debugLog)) {
+            return undefined;
+          }
+
+          // Body. Cloning important because multiple handlers may read body
+          const actualBody = await extractBodyContent(request.clone());
+          if (body !== undefined && !passesMatcherEqual(body, actualBody)) {
+            debugLog(matchMessage("body", "PATCH", fullUrl, body, actualBody));
             return undefined;
           }
 

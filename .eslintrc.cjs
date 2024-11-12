@@ -23,17 +23,24 @@ module.exports = {
     "filenames"
   ],
   rules: {
+    // Needing it in some places
+    "@typescript-eslint/no-explicit-any": "off",
+
     // Better performance when include extensions
     "import/extensions": ["error", "ignorePackages"],
+
+    // I'm fine with default as exhaustive
+    "@typescript-eslint/switch-exhaustiveness-check": [
+      "error", {
+        considerDefaultExhaustiveForUnions: true
+      }
+    ],
     
     // I Like all exports being at end of file
     "import/exports-last": "error",
 
     // Default was interfaces, I like types
     "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-
-    // Want to ensure unions are covered
-    "@typescript-eslint/switch-exhaustiveness-check": "error",
     
     // Want to know if there's uses of deprecated code
     "deprecation/deprecation": "warn",

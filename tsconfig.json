@@ -9,7 +9,7 @@
     "noUnusedLocals": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "useUnknownInCatchVariables": false,
+    "useUnknownInCatchVariables": true,
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true
   },

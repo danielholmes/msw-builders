@@ -9,11 +9,10 @@ import {
   type GraphQLVariables,
   type RequestHandlerOptions,
 } from "msw";
-import isEqual from "lodash-es/isEqual.js";
-import partial from "lodash-es/partial.js";
 import { diff } from "jest-diff";
 import { GraphQLError } from "graphql";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
+import { isEqual, partial } from "./utils.ts";
 
 type BuilderHandlerOptions = {
   readonly onCalled?: () => void;
@@ -108,6 +107,7 @@ function createGraphQlHandlersFactory({
             debugLog(
               matchMessage(
                 "mutation",
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
                 String(operationName),
                 expectedVariables,
                 variables,
@@ -174,6 +174,7 @@ function createGraphQlHandlersFactory({
             debugLog(
               matchMessage(
                 "query",
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
                 String(operationName),
                 expectedVariables,
                 variables,
