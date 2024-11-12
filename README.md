@@ -19,6 +19,6 @@ npm add -D @dhau/msw-builders
 
 ### Publishing
 
-1. Manually set new version in `package.json`
-2. Manually set new version in `jsr.json`
-3. `npm run deploy`
+Manually trigger from github actions:
+
+https://github.com/danielholmes/msw-builders/actions/workflows/publish.yml
