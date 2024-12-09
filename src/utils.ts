@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 async function extractBodyContent(
   requestOrResponse: Pick<Response, "headers" | "json" | "formData">,
 ): Promise<Record<string, unknown>> {
@@ -97,7 +98,6 @@ function isMatch(source: object, matcher: object) {
   return true;
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // type Function0<R> = () => R;
 // type Function1<T1, R> = (t1: T1) => R;
 // type Function2<T1, T2, R> = (t1: T1, t2: T2) => R;
@@ -159,11 +159,11 @@ function basePartial(
 const partial: Partial = basePartial;
 
 export {
-  isMatch,
-  isEqual,
   mapKeys,
   partial,
-  extractBodyContent,
+  isEqual,
   trimStart,
   trimEnd,
+  isMatch,
+  extractBodyContent,
 };

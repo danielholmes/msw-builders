@@ -11,13 +11,13 @@ import {
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
 import {
+  mapKeys,
+  extractBodyContent,
   partial,
+  trimStart,
+  trimEnd,
   isEqual,
   isMatch,
-  mapKeys,
-  trimEnd,
-  trimStart,
-  extractBodyContent,
 } from "./utils.ts";
 
 // Can't use this import, so duplicating
@@ -115,6 +115,7 @@ function passesMatcherContains<T>(matcher: Matcher<T>, value: object) {
 }
 
 function passesMatcherEqual<T>(matcher: Matcher<T>, value: unknown) {
+  // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof matcher) {
     case "function":
       return (matcher as unknown as MatcherFunction)(value);

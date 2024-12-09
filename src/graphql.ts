@@ -49,6 +49,27 @@ type ResultProvider<TQuery extends DefaultBodyType, TVariables> =
   | GraphQLResponseBody<TQuery>
   | ((variables: TVariables) => GraphQLResponseBody<TQuery>);
 
+function operationNameToString(name: Parameters<GraphQLRequestHandler>[0]) {
+  if (typeof name === "string") {
+    return name;
+  }
+
+  if (name instanceof RegExp) {
+    return name.source;
+  }
+
+  const definitionNames = name.definitions
+    .map((d) => ("name" in d ? d.name?.value : undefined))
+    .filter((n): n is string => !!n);
+
+  if (definitionNames.length === 0) {
+    return "<unnamed operation>";
+  }
+
+  return definitionNames[0];
+}
+
+// JSR requires explicit type for exported types
 type GraphQlHandlersFactory = {
   mutation: <
     Query extends Record<string, unknown>,
@@ -107,8 +128,7 @@ function createGraphQlHandlersFactory({
             debugLog(
               matchMessage(
                 "mutation",
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                String(operationName),
+                operationNameToString(operationName),
                 expectedVariables,
                 variables,
               ),
@@ -174,8 +194,7 @@ function createGraphQlHandlersFactory({
             debugLog(
               matchMessage(
                 "query",
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                String(operationName),
+                operationNameToString(operationName),
                 expectedVariables,
                 variables,
               ),

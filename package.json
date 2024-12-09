@@ -48,10 +48,10 @@
     "jest-diff": "^29.3.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.17.0",
-    "@types/node": "^22.9.0",
-    "@typescript-eslint/eslint-plugin": "^8.14.0",
-    "@typescript-eslint/parser": "^8.14.0",
+    "@arethetypeswrong/cli": "^0.17.1",
+    "@types/node": "^22.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^8.42.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-deprecation": "^2.0.0",
@@ -68,7 +68,7 @@
     "prettier": "^3.0.3",
     "publint": "^0.2.8",
     "tslib": "^2.4.1",
-    "tsup": "^8.2.4",
+    "tsup": "^8.3.5",
     "tsx": "^4.0.0",
     "typescript": "^5.1.3"
   },
