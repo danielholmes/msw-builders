@@ -20,7 +20,7 @@ import { matchHeaders } from "./shared-matchers.ts";
 
 type BuilderHandlerOptions<THeaders extends Record<string, string>> = {
   readonly onCalled?: () => void;
-  readonly headersMatcher?: Matcher<THeaders>;
+  readonly headers?: Matcher<THeaders>;
 };
 
 type HandlerOptions<THeaders extends Record<string, string>> =
@@ -77,7 +77,7 @@ function operationNameToString(name: Parameters<GraphQLRequestHandler>[0]) {
 
 type MatchOptions<
   TVariables extends GraphQLVariables = GraphQLVariables,
-  THeaders extends Record<string, string> = Record<string, never>,
+  THeaders extends Record<string, string> = Record<string, string>,
 > = {
   readonly headersMatcher?: Matcher<THeaders>;
   readonly expectedVariables: TVariables;
@@ -85,7 +85,7 @@ type MatchOptions<
 
 function runMatchAndDebugLog<
   TVariables extends GraphQLVariables = GraphQLVariables,
-  THeaders extends Record<string, string> = Record<string, never>,
+  THeaders extends Record<string, string> = Record<string, string>,
 >(
   operationType: "mutation" | "query" | "operation",
   operationName: Parameters<GraphQLRequestHandler>[0],
@@ -105,7 +105,7 @@ function runMatchAndDebugLog<
         variables,
       ),
     );
-    return undefined;
+    return false;
   }
 
   if (!isEqual(expectedVariables, variables)) {
@@ -117,8 +117,10 @@ function runMatchAndDebugLog<
         variables,
       ),
     );
-    return undefined;
+    return false;
   }
+
+  return true;
 }
 
 // JSR requires explicit type for exported types
@@ -126,7 +128,7 @@ type GraphQlHandlersFactory = {
   mutation: <
     Query extends Record<string, unknown>,
     Variables extends GraphQLVariables = GraphQLVariables,
-    THeaders extends Record<string, string> = Record<string, never>,
+    THeaders extends Record<string, string> = Record<string, string>,
   >(
     operationName: Parameters<GraphQLRequestHandler>[0],
     expectedVariables: Variables,
@@ -136,7 +138,7 @@ type GraphQlHandlersFactory = {
   operation: <
     Query extends Record<string, unknown>,
     Variables extends GraphQLVariables = GraphQLVariables,
-    THeaders extends Record<string, string> = Record<string, never>,
+    THeaders extends Record<string, string> = Record<string, string>,
   >(
     expectedVariables: Variables,
     resultProvider: ResultProvider<Query, Variables>,
@@ -145,7 +147,7 @@ type GraphQlHandlersFactory = {
   query: <
     Query extends Record<string, unknown>,
     Variables extends GraphQLVariables = GraphQLVariables,
-    THeaders extends Record<string, string> = Record<string, never>,
+    THeaders extends Record<string, string> = Record<string, string>,
   >(
     operationName: Parameters<GraphQLRequestHandler>[0],
     expectedVariables: Variables,
@@ -165,14 +167,14 @@ function createGraphQlHandlersFactory({
     mutation: <
       Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables,
-      THeaders extends Record<string, string> = Record<string, never>,
+      THeaders extends Record<string, string> = Record<string, string>,
     >(
       operationName: Parameters<GraphQLRequestHandler>[0],
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
       options?: HandlerOptions<THeaders>,
     ) => {
-      const { onCalled, headersMatcher, ...rest } = {
+      const { onCalled, headers, ...rest } = {
         ...defaultRequestHandlerOptions,
         ...options,
       };
@@ -183,7 +185,7 @@ function createGraphQlHandlersFactory({
             !runMatchAndDebugLog(
               "mutation",
               operationName,
-              { headersMatcher, expectedVariables },
+              { headersMatcher: headers, expectedVariables },
               info,
               debugLog,
             )
@@ -205,19 +207,19 @@ function createGraphQlHandlersFactory({
     operation: <
       Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables,
-      THeaders extends Record<string, string> = Record<string, never>,
+      THeaders extends Record<string, string> = Record<string, string>,
     >(
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
       options?: BuilderHandlerOptions<THeaders>,
     ) => {
-      const { onCalled, headersMatcher } = options ?? {};
+      const { onCalled, headers } = options ?? {};
       return link.operation<Query, Variables>((info) => {
         if (
           !runMatchAndDebugLog(
             "operation",
             "(anonymous)",
-            { headersMatcher, expectedVariables },
+            { headersMatcher: headers, expectedVariables },
             info,
             debugLog,
           )
@@ -237,14 +239,14 @@ function createGraphQlHandlersFactory({
     query: <
       Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables,
-      THeaders extends Record<string, string> = Record<string, never>,
+      THeaders extends Record<string, string> = Record<string, string>,
     >(
       operationName: Parameters<GraphQLRequestHandler>[0],
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
       options?: HandlerOptions<THeaders>,
     ) => {
-      const { onCalled, headersMatcher, ...rest } = {
+      const { onCalled, headers, ...rest } = {
         ...defaultRequestHandlerOptions,
         ...options,
       };
@@ -255,7 +257,7 @@ function createGraphQlHandlersFactory({
             !runMatchAndDebugLog(
               "query",
               operationName,
-              { headersMatcher, expectedVariables },
+              { headersMatcher: headers, expectedVariables },
               info,
               debugLog,
             )

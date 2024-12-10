@@ -1,5 +1,5 @@
 {
     "name": "@dhau/msw-builders",
-    "version": "0.0.39",
+    "version": "0.0.40",
     "exports": "./src/index.ts"
 }
