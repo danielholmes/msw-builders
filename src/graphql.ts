@@ -2,23 +2,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   graphql,
-  GraphQLHandler,
   HttpResponse,
   type DefaultBodyType,
   type GraphQLRequestHandler,
   type GraphQLVariables,
   type RequestHandlerOptions,
+  type GraphQLHandler,
+  type GraphQLQuery,
+  type GraphQLResponseResolver,
 } from "msw";
 import { diff } from "jest-diff";
-import { GraphQLError } from "graphql";
+import type { GraphQLError } from "graphql";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
 import { isEqual, partial } from "./utils.ts";
+import type { Matcher } from "./shared-matchers.ts";
+import { matchHeaders } from "./shared-matchers.ts";
 
-type BuilderHandlerOptions = {
+type BuilderHandlerOptions<THeaders extends Record<string, string>> = {
   readonly onCalled?: () => void;
+  readonly headersMatcher?: Matcher<THeaders>;
 };
 
-type HandlerOptions = RequestHandlerOptions & BuilderHandlerOptions;
+type HandlerOptions<THeaders extends Record<string, string>> =
+  RequestHandlerOptions & BuilderHandlerOptions<THeaders>;
 
 type Options = {
   readonly url: string;
@@ -69,33 +75,82 @@ function operationNameToString(name: Parameters<GraphQLRequestHandler>[0]) {
   return definitionNames[0];
 }
 
+type MatchOptions<
+  TVariables extends GraphQLVariables = GraphQLVariables,
+  THeaders extends Record<string, string> = Record<string, never>,
+> = {
+  readonly headersMatcher?: Matcher<THeaders>;
+  readonly expectedVariables: TVariables;
+};
+
+function runMatchAndDebugLog<
+  TVariables extends GraphQLVariables = GraphQLVariables,
+  THeaders extends Record<string, string> = Record<string, never>,
+>(
+  operationType: "mutation" | "query" | "operation",
+  operationName: Parameters<GraphQLRequestHandler>[0],
+  { headersMatcher, expectedVariables }: MatchOptions<TVariables, THeaders>,
+  {
+    request,
+    variables,
+  }: Parameters<GraphQLResponseResolver<GraphQLQuery, TVariables>>[0],
+  debugLog: typeof console.log,
+) {
+  if (headersMatcher !== undefined && !matchHeaders(headersMatcher, request)) {
+    debugLog(
+      matchMessage(
+        operationType,
+        operationNameToString(operationName),
+        expectedVariables,
+        variables,
+      ),
+    );
+    return undefined;
+  }
+
+  if (!isEqual(expectedVariables, variables)) {
+    debugLog(
+      matchMessage(
+        operationType,
+        operationNameToString(operationName),
+        expectedVariables,
+        variables,
+      ),
+    );
+    return undefined;
+  }
+}
+
 // JSR requires explicit type for exported types
 type GraphQlHandlersFactory = {
   mutation: <
     Query extends Record<string, unknown>,
     Variables extends GraphQLVariables = GraphQLVariables,
+    THeaders extends Record<string, string> = Record<string, never>,
   >(
     operationName: Parameters<GraphQLRequestHandler>[0],
     expectedVariables: Variables,
     resultProvider: ResultProvider<Query, Variables>,
-    options?: HandlerOptions,
+    options?: HandlerOptions<THeaders>,
   ) => GraphQLHandler;
   operation: <
     Query extends Record<string, unknown>,
     Variables extends GraphQLVariables = GraphQLVariables,
+    THeaders extends Record<string, string> = Record<string, never>,
   >(
     expectedVariables: Variables,
     resultProvider: ResultProvider<Query, Variables>,
-    options?: HandlerOptions,
+    options?: HandlerOptions<THeaders>,
   ) => GraphQLHandler;
   query: <
     Query extends Record<string, unknown>,
     Variables extends GraphQLVariables = GraphQLVariables,
+    THeaders extends Record<string, string> = Record<string, never>,
   >(
     operationName: Parameters<GraphQLRequestHandler>[0],
     expectedVariables: Variables,
     resultProvider: ResultProvider<Query, Variables>,
-    options?: HandlerOptions,
+    options?: HandlerOptions<THeaders>,
   ) => GraphQLHandler;
 };
 
@@ -110,31 +165,33 @@ function createGraphQlHandlersFactory({
     mutation: <
       Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables,
+      THeaders extends Record<string, string> = Record<string, never>,
     >(
       operationName: Parameters<GraphQLRequestHandler>[0],
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
-      options?: HandlerOptions,
+      options?: HandlerOptions<THeaders>,
     ) => {
-      const { onCalled, ...rest } = {
+      const { onCalled, headersMatcher, ...rest } = {
         ...defaultRequestHandlerOptions,
         ...options,
       };
       return link.mutation<Query, Variables>(
         operationName,
-        ({ variables }) => {
-          // TODO: Update variables. Not sure how to operationName them in new msw version
-          if (!isEqual(expectedVariables, variables)) {
-            debugLog(
-              matchMessage(
-                "mutation",
-                operationNameToString(operationName),
-                expectedVariables,
-                variables,
-              ),
-            );
+        (info) => {
+          if (
+            !runMatchAndDebugLog(
+              "mutation",
+              operationName,
+              { headersMatcher, expectedVariables },
+              info,
+              debugLog,
+            )
+          ) {
             return undefined;
           }
+
+          const { variables } = info;
           onCalled?.();
           const responseBody =
             typeof resultProvider === "function"
@@ -148,24 +205,27 @@ function createGraphQlHandlersFactory({
     operation: <
       Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables,
+      THeaders extends Record<string, string> = Record<string, never>,
     >(
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
-      options?: BuilderHandlerOptions,
+      options?: BuilderHandlerOptions<THeaders>,
     ) => {
-      const { onCalled } = options ?? {};
-      return link.operation<Query, Variables>(({ variables }) => {
-        if (!isEqual(expectedVariables, variables)) {
-          debugLog(
-            matchMessage(
-              "operation",
-              "(anonymous)",
-              expectedVariables,
-              variables,
-            ),
-          );
+      const { onCalled, headersMatcher } = options ?? {};
+      return link.operation<Query, Variables>((info) => {
+        if (
+          !runMatchAndDebugLog(
+            "operation",
+            "(anonymous)",
+            { headersMatcher, expectedVariables },
+            info,
+            debugLog,
+          )
+        ) {
           return undefined;
         }
+
+        const { variables } = info;
         onCalled?.();
         const responseBody =
           typeof resultProvider === "function"
@@ -177,30 +237,33 @@ function createGraphQlHandlersFactory({
     query: <
       Query extends Record<string, unknown>,
       Variables extends GraphQLVariables = GraphQLVariables,
+      THeaders extends Record<string, string> = Record<string, never>,
     >(
       operationName: Parameters<GraphQLRequestHandler>[0],
       expectedVariables: Variables,
       resultProvider: ResultProvider<Query, Variables>,
-      options?: HandlerOptions,
+      options?: HandlerOptions<THeaders>,
     ) => {
-      const { onCalled, ...rest } = {
+      const { onCalled, headersMatcher, ...rest } = {
         ...defaultRequestHandlerOptions,
         ...options,
       };
       return link.query<Query, Variables>(
         operationName,
-        ({ variables }) => {
-          if (!isEqual(expectedVariables, variables)) {
-            debugLog(
-              matchMessage(
-                "query",
-                operationNameToString(operationName),
-                expectedVariables,
-                variables,
-              ),
-            );
+        (info) => {
+          if (
+            !runMatchAndDebugLog(
+              "query",
+              operationName,
+              { headersMatcher, expectedVariables },
+              info,
+              debugLog,
+            )
+          ) {
             return undefined;
           }
+
+          const { variables } = info;
           onCalled?.();
           const responseBody =
             typeof resultProvider === "function"

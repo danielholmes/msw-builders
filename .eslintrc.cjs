@@ -23,6 +23,9 @@ module.exports = {
     "filenames"
   ],
   rules: {
+    // Better performance for tooling (and helps reason about it too)
+    "@typescript-eslint/consistent-type-imports": "error",
+
     // Needing it in some places
     "@typescript-eslint/no-explicit-any": "off",
 

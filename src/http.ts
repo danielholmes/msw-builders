@@ -1,24 +1,24 @@
 import {
+  type StrictRequest,
+  type HttpHandler,
   http,
   type DefaultBodyType,
   type ResponseResolver,
   type PathParams,
   type ResponseResolverReturnType,
   type RequestHandlerOptions,
-  StrictRequest,
-  HttpHandler,
 } from "msw";
 import { diff } from "jest-diff";
 import { consoleDebugLog, nullLogger } from "./debug.ts";
 import {
-  mapKeys,
   extractBodyContent,
   partial,
   trimStart,
   trimEnd,
   isEqual,
-  isMatch,
 } from "./utils.ts";
+import type { Matcher, MatcherFunction } from "./shared-matchers.ts";
+import { matchHeaders } from "./shared-matchers.ts";
 
 // Can't use this import, so duplicating
 // import { ResponseResolverInfo } from "msw/lib/core/handlers/RequestHandler";
@@ -35,14 +35,6 @@ type HttpRequestResolverExtras<Params extends PathParams> = {
   params: Params;
   cookies: Record<string, string>;
 };
-
-// NotFunction didn't work for me, maybe look into in future
-// type NotFunction<T> = T extends Function ? never : T;
-// type Matcher<T> = NotFunction<T> | ((value: T) => boolean);
-
-type MatcherFunction = (value: unknown) => boolean;
-
-type Matcher<T> = T | MatcherFunction;
 
 type MatcherOptions<
   TSearchParams extends Record<string, string>,
@@ -99,21 +91,6 @@ function searchParamsToObject(searchParams: URLSearchParams) {
   return obj;
 }
 
-function passesMatcherContains<T>(matcher: Matcher<T>, value: object) {
-  if (
-    typeof matcher === "function" &&
-    !(matcher as unknown as MatcherFunction)(value)
-  ) {
-    return false;
-  }
-
-  if (!!matcher && typeof matcher === "object" && !isMatch(value, matcher)) {
-    return false;
-  }
-
-  return true;
-}
-
 function passesMatcherEqual<T>(matcher: Matcher<T>, value: unknown) {
   // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
   switch (typeof matcher) {
@@ -134,28 +111,18 @@ function runMatchers<
 >(
   { headers, searchParams }: MatcherOptions<TSearchParams, THeaders>,
   fullUrl: string,
-  req: Request,
+  request: Request,
   debugLog: (message: string) => void,
 ) {
-  // Headers. We want to allow other random headers, so we only do a contains match
-  // We also want to match case-insensitively
-  const actualHeaders = Object.fromEntries(req.headers.entries());
-  if (
-    headers !== undefined &&
-    !passesMatcherContains(
-      typeof headers === "object"
-        ? mapKeys(headers, (_, k) => k.toLowerCase())
-        : headers,
-      mapKeys(actualHeaders, (_, k) => k.toLowerCase()),
-    )
-  ) {
+  if (headers !== undefined && !matchHeaders(headers, request)) {
+    const actualHeaders = Object.fromEntries(request.headers.entries());
     debugLog(matchMessage("headers", "_", fullUrl, headers, actualHeaders));
     return false;
   }
 
   // Search params
   const actualSearchParams = searchParamsToObject(
-    new URL(req.url).searchParams,
+    new URL(request.url).searchParams,
   );
   if (
     searchParams !== undefined &&
