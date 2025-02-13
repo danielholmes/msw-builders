@@ -12,21 +12,21 @@ jobs:
   publish:
     name: "Publish"
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
 
     permissions:
       id-token: write
       contents: read
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: ASDF Setup
-        uses: asdf-vm/actions/setup@v3
+        uses: asdf-vm/actions/setup@v3.0.2
 
       - name: Restore ASDF tools from cache
         id: asdf-tools-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v4.2.0
         with:
           key: asdf-tools-${{ hashFiles('**/.tool-versions') }}
           restore-keys: |
@@ -37,14 +37,14 @@ jobs:
 
       - name: Install ASDF tools on cache-miss
         if: ${{ steps.asdf-tools-cache.outputs.cache-hit != 'true' }}
-        uses: asdf-vm/actions/install@v3
+        uses: asdf-vm/actions/install@v3.0.2
         
       - name: Reshim installed ASDF tools
         shell: bash
         run: asdf reshim
 
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        uses: bahmutov/npm-install@v1.10.5
 
       - name: Setup registry
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }}" > ~/.npmrc
@@ -56,7 +56,7 @@ jobs:
         run: npm run deploy
     
       - name: Tag and release
-        uses: avakar/tag-and-release@v1
+        uses: avakar/tag-and-release@v1.0.0
         with:
           tag_name: ${{ env.TAG_NAME }}
           release_name: ${{ env.TAG_NAME }}
