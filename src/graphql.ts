@@ -18,8 +18,12 @@ import { isEqual, partial } from "./utils.ts";
 import type { Matcher } from "./shared-matchers.ts";
 import { matchHeaders } from "./shared-matchers.ts";
 
+type CallInfo = {
+  readonly request: Request;
+};
+
 type BuilderHandlerOptions<THeaders extends Record<string, string>> = {
-  readonly onCalled?: () => void;
+  readonly onCalled?: (info: CallInfo) => void;
   readonly headers?: Matcher<THeaders>;
 };
 
@@ -193,8 +197,8 @@ function createGraphQlHandlersFactory({
             return undefined;
           }
 
-          const { variables } = info;
-          onCalled?.();
+          const { request, variables } = info;
+          onCalled?.({ request });
           const responseBody =
             typeof resultProvider === "function"
               ? resultProvider(variables)
@@ -227,8 +231,8 @@ function createGraphQlHandlersFactory({
           return undefined;
         }
 
-        const { variables } = info;
-        onCalled?.();
+        const { request, variables } = info;
+        onCalled?.({ request });
         const responseBody =
           typeof resultProvider === "function"
             ? resultProvider(variables)
@@ -265,8 +269,8 @@ function createGraphQlHandlersFactory({
             return undefined;
           }
 
-          const { variables } = info;
-          onCalled?.();
+          const { request, variables } = info;
+          onCalled?.({ request });
           const responseBody =
             typeof resultProvider === "function"
               ? resultProvider(variables)

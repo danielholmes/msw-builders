@@ -52,8 +52,12 @@ type WithBodyMatcherOptions<
   readonly body?: Matcher<RequestBodyType>;
 };
 
+type CallInfo = {
+  readonly request: Request;
+};
+
 type HandlerOptions = {
-  readonly onCalled?: () => void;
+  readonly onCalled?: (info: CallInfo) => void;
 };
 
 type Options = {
@@ -263,11 +267,12 @@ function createRestHandlersFactory({
       return http.options<Params, never, ResponseBody>(
         fullUrl,
         (info) => {
-          if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
+          const { request } = info;
+          if (!runMatchers(matchers, fullUrl, request, debugLog)) {
             return;
           }
 
-          onCalled?.();
+          onCalled?.({ request });
           return response(info);
         },
         rest,
@@ -296,11 +301,16 @@ function createRestHandlersFactory({
       return http.get<Params, never, ResponseBody>(
         fullUrl,
         (info) => {
-          if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
+          const { request } = info;
+          if (!runMatchers(matchers, fullUrl, request, debugLog)) {
             return;
           }
 
-          onCalled?.();
+          onCalled?.({
+            get request() {
+              return request.clone();
+            },
+          });
           return response(info);
         },
         rest,
@@ -358,7 +368,11 @@ function createRestHandlersFactory({
             return undefined;
           }
 
-          onCalled?.();
+          onCalled?.({
+            get request() {
+              return request.clone();
+            },
+          });
           return response(info);
         },
         rest,
@@ -416,7 +430,11 @@ function createRestHandlersFactory({
             return undefined;
           }
 
-          onCalled?.();
+          onCalled?.({
+            get request() {
+              return request.clone();
+            },
+          });
           return response(info);
         },
         rest,
@@ -474,7 +492,11 @@ function createRestHandlersFactory({
             return undefined;
           }
 
-          onCalled?.();
+          onCalled?.({
+            get request() {
+              return request.clone();
+            },
+          });
           return response(info);
         },
         rest,

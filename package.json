@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.40",
+  "version": "0.0.41",
   "type": "module",
   "repository": {
     "url": "https://github.com/danielholmes/msw-builders"
