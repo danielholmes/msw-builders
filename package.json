@@ -1,6 +1,6 @@
 {
   "name": "@dhau/msw-builders",
-  "version": "0.0.41",
+  "version": "0.0.42",
   "type": "module",
   "repository": {
     "url": "https://github.com/danielholmes/msw-builders"
@@ -46,11 +46,11 @@
   "author": "Daniel Holmes",
   "license": "MIT",
   "dependencies": {
-    "jest-diff": "^29.3.1"
+    "jest-diff": "^30.1.2"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.17.1",
-    "@types/node": "^22.10.1",
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@types/node": "^24.4.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^8.42.0",
@@ -63,7 +63,7 @@
     "graphql-tag": "^2.12.6",
     "husky": "^9.0.11",
     "jsr": "^0.13.1",
-    "lint-staged": "^15.0.1",
+    "lint-staged": "^16.1.6",
     "msw": "^2.0.4",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.0.3",

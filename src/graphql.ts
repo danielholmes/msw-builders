@@ -23,7 +23,7 @@ type CallInfo = {
 };
 
 type BuilderHandlerOptions<THeaders extends Record<string, string>> = {
-  readonly onCalled?: (info: CallInfo) => void;
+  readonly onCalled?: (info: CallInfo) => void | Promise<void>;
   readonly headers?: Matcher<THeaders>;
 };
 
@@ -66,6 +66,10 @@ function operationNameToString(name: Parameters<GraphQLRequestHandler>[0]) {
 
   if (name instanceof RegExp) {
     return name.source;
+  }
+
+  if (typeof name === "function") {
+    return "<custom predicate operation>";
   }
 
   const definitionNames = name.definitions
@@ -184,7 +188,7 @@ function createGraphQlHandlersFactory({
       };
       return link.mutation<Query, Variables>(
         operationName,
-        (info) => {
+        async (info) => {
           if (
             !runMatchAndDebugLog(
               "mutation",
@@ -198,7 +202,7 @@ function createGraphQlHandlersFactory({
           }
 
           const { request, variables } = info;
-          onCalled?.({ request });
+          await onCalled?.({ request });
           const responseBody =
             typeof resultProvider === "function"
               ? resultProvider(variables)
@@ -218,7 +222,7 @@ function createGraphQlHandlersFactory({
       options?: BuilderHandlerOptions<THeaders>,
     ) => {
       const { onCalled, headers } = options ?? {};
-      return link.operation<Query, Variables>((info) => {
+      return link.operation<Query, Variables>(async (info) => {
         if (
           !runMatchAndDebugLog(
             "operation",
@@ -232,7 +236,7 @@ function createGraphQlHandlersFactory({
         }
 
         const { request, variables } = info;
-        onCalled?.({ request });
+        await onCalled?.({ request });
         const responseBody =
           typeof resultProvider === "function"
             ? resultProvider(variables)
@@ -256,7 +260,7 @@ function createGraphQlHandlersFactory({
       };
       return link.query<Query, Variables>(
         operationName,
-        (info) => {
+        async (info) => {
           if (
             !runMatchAndDebugLog(
               "query",
@@ -270,7 +274,7 @@ function createGraphQlHandlersFactory({
           }
 
           const { request, variables } = info;
-          onCalled?.({ request });
+          await onCalled?.({ request });
           const responseBody =
             typeof resultProvider === "function"
               ? resultProvider(variables)

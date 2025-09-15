@@ -57,7 +57,7 @@ type CallInfo = {
 };
 
 type HandlerOptions = {
-  readonly onCalled?: (info: CallInfo) => void;
+  readonly onCalled?: (info: CallInfo) => void | Promise<void>;
 };
 
 type Options = {
@@ -266,13 +266,13 @@ function createRestHandlersFactory({
       const fullUrl = createFullUrl(url, path);
       return http.options<Params, never, ResponseBody>(
         fullUrl,
-        (info) => {
+        async (info) => {
           const { request } = info;
           if (!runMatchers(matchers, fullUrl, request, debugLog)) {
             return;
           }
 
-          onCalled?.({ request });
+          await onCalled?.({ request });
           return response(info);
         },
         rest,
@@ -300,13 +300,13 @@ function createRestHandlersFactory({
       const fullUrl = createFullUrl(url, path);
       return http.get<Params, never, ResponseBody>(
         fullUrl,
-        (info) => {
+        async (info) => {
           const { request } = info;
           if (!runMatchers(matchers, fullUrl, request, debugLog)) {
             return;
           }
 
-          onCalled?.({
+          await onCalled?.({
             get request() {
               return request.clone();
             },
@@ -368,7 +368,7 @@ function createRestHandlersFactory({
             return undefined;
           }
 
-          onCalled?.({
+          await onCalled?.({
             get request() {
               return request.clone();
             },
@@ -430,7 +430,7 @@ function createRestHandlersFactory({
             return undefined;
           }
 
-          onCalled?.({
+          await onCalled?.({
             get request() {
               return request.clone();
             },
@@ -492,7 +492,7 @@ function createRestHandlersFactory({
             return undefined;
           }
 
-          onCalled?.({
+          await onCalled?.({
             get request() {
               return request.clone();
             },
