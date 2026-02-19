@@ -72,15 +72,19 @@ function operationNameToString(name: Parameters<GraphQLRequestHandler>[0]) {
     return "<custom predicate operation>";
   }
 
-  const definitionNames = name.definitions
-    .map((d) => ("name" in d ? d.name?.value : undefined))
-    .filter((n): n is string => !!n);
+  if ("kind" in name) {
+    const definitionNames = name.definitions
+      .map((d) => ("name" in d ? d.name?.value : undefined))
+      .filter((n): n is string => !!n);
 
-  if (definitionNames.length === 0) {
-    return "<unnamed operation>";
+    if (definitionNames.length === 0) {
+      return "<unnamed operation>";
+    }
+
+    return definitionNames[0];
   }
 
-  return definitionNames[0];
+  throw new Error("Not implemented");
 }
 
 type MatchOptions<
@@ -187,7 +191,7 @@ function createGraphQlHandlersFactory({
         ...options,
       };
       return link.mutation<Query, Variables>(
-        operationName,
+        operationName as any,
         async (info) => {
           if (
             !runMatchAndDebugLog(
@@ -259,7 +263,7 @@ function createGraphQlHandlersFactory({
         ...options,
       };
       return link.query<Query, Variables>(
-        operationName,
+        operationName as any,
         async (info) => {
           if (
             !runMatchAndDebugLog(

@@ -384,4 +384,25 @@ describe("http", () => {
       assert.equal(result?.response?.status, 200);
     });
   });
+
+  describe("delete", () => {
+    it("allows matching of no matchers", async () => {
+      const matcher = builders.delete("/test", {}, () =>
+        HttpResponse.json({
+          ok: true,
+        }),
+      );
+      const request = new Request(new URL("https://www.example.org/test"), {
+        method: "DELETE",
+      });
+
+      const result = await matcher.run({ requestId: "1", request });
+
+      const responseBody = result?.response?.body
+        ? await extractBodyContent(result.response)
+        : undefined;
+      assert.deepEqual(responseBody, { ok: true });
+      assert.equal(result?.response?.status, 200);
+    });
+  });
 });

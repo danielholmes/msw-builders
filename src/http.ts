@@ -220,6 +220,21 @@ type RestHandlersFactory = {
     >,
     options?: HandlerOptions,
   ) => HttpHandler;
+  delete: <
+    TSearchParams extends Record<string, string>,
+    THeaders extends Record<string, string>,
+    Params extends PathParams<keyof Params> = PathParams,
+    ResponseBody extends DefaultBodyType = DefaultBodyType,
+  >(
+    path: string,
+    matchers: MatcherOptions<TSearchParams, THeaders>,
+    response: ResponseResolver<
+      HttpRequestResolverExtras<Params>,
+      never,
+      ResponseBody
+    >,
+    options?: HandlerOptions,
+  ) => HttpHandler;
   options: <
     TSearchParams extends Record<string, string>,
     THeaders extends Record<string, string>,
@@ -307,6 +322,44 @@ function createRestHandlersFactory({
           }
 
           await onCalled?.({
+            get request() {
+              return request.clone();
+            },
+          });
+          return response(info);
+        },
+        rest,
+      );
+    },
+    delete: <
+      TSearchParams extends Record<string, string>,
+      THeaders extends Record<string, string>,
+      Params extends PathParams<keyof Params> = PathParams,
+      ResponseBody extends DefaultBodyType = DefaultBodyType,
+    >(
+      path: string,
+      matchers: MatcherOptions<TSearchParams, THeaders>,
+      response: ResponseResolver<
+        HttpRequestResolverExtras<Params>,
+        never,
+        ResponseBody
+      >,
+      options?: HandlerOptions,
+    ) => {
+      const { onCalled, ...rest } = {
+        ...defaultRequestHandlerOptions,
+        ...options,
+      };
+      const fullUrl = createFullUrl(url, path);
+      return http.delete<Params, never, ResponseBody>(
+        fullUrl,
+        (info) => {
+          const { request } = info;
+          if (!runMatchers(matchers, fullUrl, info.request, debugLog)) {
+            return;
+          }
+
+          onCalled?.({
             get request() {
               return request.clone();
             },
