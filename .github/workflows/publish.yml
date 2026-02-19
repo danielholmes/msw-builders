@@ -8,6 +8,10 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   publish:
     name: "Publish"
@@ -19,10 +23,10 @@ jobs:
       contents: read
     
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v6.0.2
 
       - name: ASDF Setup
-        uses: asdf-vm/actions/setup@v3.0.2
+        uses: asdf-vm/actions/setup@v4.0.1
 
       - name: Restore ASDF tools from cache
         id: asdf-tools-cache
@@ -37,17 +41,17 @@ jobs:
 
       - name: Install ASDF tools on cache-miss
         if: ${{ steps.asdf-tools-cache.outputs.cache-hit != 'true' }}
-        uses: asdf-vm/actions/install@v3.0.2
+        uses: asdf-vm/actions/install@v4.0.1
         
       - name: Reshim installed ASDF tools
         shell: bash
         run: asdf reshim
 
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1.10.5
+        uses: bahmutov/npm-install@v1.11.2
 
-      - name: Setup registry
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_PUBLISH_TOKEN }}" > ~/.npmrc
+      # - name: Setup registry
+      #   run: echo "//registry.npmjs.org/:_authToken=-- secrets.NPM_PUBLISH_TOKEN --" > ~/.npmrc
     
       - name: Extract version
         run: echo "TAG_NAME=$(jq -r .version package.json)" >> $GITHUB_ENV
